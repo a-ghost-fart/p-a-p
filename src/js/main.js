@@ -1,15 +1,15 @@
 var Config = require('./conf/Config.js');
-var LoadingState = require('./states/LoadingState.js');
 
+// Bootstrap phaser and states
 window.onload = function () {
     'use strict';
     window.g = new Phaser.Game(
         Config.WIDTH,
         Config.HEIGHT,
-        Phaser.AUTO,
-        document.body,
-        LoadingState,
-        false
+        Phaser.CANVAS
     );
+    window.g.state.add('load', require('./states/LoadingState'));
+    window.g.state.add('play', require('./states/PlayState'));
+    window.g.state.start('load');
 };
 

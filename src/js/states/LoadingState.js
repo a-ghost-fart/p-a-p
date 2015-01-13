@@ -1,11 +1,10 @@
 module.exports = {
+    'preload': function () {
+        'use strict';
+        this.load.image('test', 'assets/sprites/test_player.png');
+    },
     'create': function () {
         'use strict';
-        window.g.stage.backgroundColor = '#fff';
-        window.g.load.image('test', 'assets/test_player.png');
-        var player = window.g.add.sprite(32, 48, 'test');
-    },
-    'update': function () {
-
+        this.state.start('play');
     }
 };
