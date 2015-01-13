@@ -1,30 +1,48 @@
 var Quest = require('./Quest');
 
-function Journal(game) {
+function Journal() {
     'use strict';
     this.quests = {
         'open': [],
         'failed': [],
         'completed': []
     };
-    this.init_events(game);
+    this.journal = [];
 }
 
 
-Journal.prototype.init_events = function (game) {
+Journal.prototype.add_entry = function (text) {
     'use strict';
-    game.events.complete_quest = new Phaser.Signal();
-    game.events.complete_quest.add(this.complete_quest.bind(this));
-    game.events.fail_quest = new Phaser.Signal();
-    game.events.fail_quest.add(this.fail_quest.bind(this));
-    game.events.add_quest = new Phaser.Signal();
-    game.events.add_quest.add(this.add_quest.bind(this));
+    this.journal.push(text);
+};
+
+
+Journal.prototype.get_journal = function () {
+    'use strict';
+    for (var i = this.journal.length - 1; i >= 0; i--) {
+        console.log(this.journal[i]);
+    }
 };
 
 
 Journal.prototype.add_quest = function (quest) {
     'use strict';
-    this.quests.open[quest.id] = quest;
+    if (quest.journal_entry !== null) {
+        this.add_entry(quest.journal_entry);
+    }
+    this.quests.open.push(quest);
+};
+
+
+Journal.prototype.find_quest_index_by_id = function (id) {
+    'use strict';
+    var index = null;
+    for (var i = 0; i < this.quests.open.length; i++) {
+        if (this.quests.open[i].id === id) {
+            index = i;
+        }
+    }
+    return index;
 };
 
 
@@ -33,11 +51,13 @@ Journal.prototype.complete_quest = function (id) {
     if (!id) {
         throw new Error('You must supply an id for a quest to complete.');
     }
-    if (!this.quests.open[id]) {
+    var index = this.find_quest_index_by_id(id);
+    if (index === null) {
         throw new Error('Cannot complete quest with id "' + id + '" as it is not found.');
     }
-    this.quests.completed.push(this.quests.open[id]);
-    delete this.quests.open[id];
+    this.quests.open[index].complete();
+    this.quests.completed.push(this.quests.open[index]);
+    this.quests.open.splice(index, 1);
 };
 
 
@@ -46,11 +66,13 @@ Journal.prototype.fail_quest = function (id) {
     if (!id) {
         throw new Error('You must supply an id for a quest to fail.');
     }
-    if (!this.quests.open[id]) {
+    var index = this.find_quest_index_by_id(id);
+    if (index === null) {
         throw new Error('Cannot fail quest with id "' + id + '" as it is not found.');
     }
-    this.quests.failed.push(this.quests.open[id]);
-    delete this.quests.open[id];
+    this.quests.open[index].fail();
+    this.quests.failed.push(this.quests.open[index]);
+    this.quests.open.splice(index, 1);
 };
 
 

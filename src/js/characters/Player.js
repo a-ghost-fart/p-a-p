@@ -9,10 +9,18 @@ function Player(game) {
     'use strict';
     BaseCharacter.call(this);
 
+    this.coins = 0;
+    this.hp = 100;
+    this.mp = 100;
+
     this.inventory = [];
     this.journal = new Journal(game);
 
-    game.events.add_quest.dispatch(new Quest('test test', 'derp', 200));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'here is a bunch of text added to the journal'));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'more text added to journal'));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'yet more'));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'this is the newest entry'));
+    this.journal.get_journal();
 }
 
 module.exports = Player;
