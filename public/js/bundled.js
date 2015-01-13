@@ -7,27 +7,25 @@ module.exports = BaseCharacter;
 
 },{}],2:[function(require,module,exports){
 var BaseCharacter = require('./BaseCharacter');
+var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 
 Player.prototype = BaseCharacter;
 Player.prototype.constructor = Player;
 
-function Player() {
+function Player(game) {
     'use strict';
     BaseCharacter.call(this);
 
     this.inventory = [];
-    this.quests = {
-        'completed': [],
-        'failed': [],
-        'open': []
-    };
-    this.quests.open.push(new Quest('test quest', 'this is a test quest, duh', 200));
+    this.journal = new Journal(game);
+
+    game.events.add_quest.dispatch(new Quest('test test', 'derp', 200));
 }
 
 module.exports = Player;
 
-},{"../quest/Quest":5,"./BaseCharacter":1}],3:[function(require,module,exports){
+},{"../quest/Journal":5,"../quest/Quest":6,"./BaseCharacter":1}],3:[function(require,module,exports){
 module.exports = {
     'WIDTH': 800,
     'HEIGHT': 600
@@ -50,7 +48,66 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":6,"./states/PlayState":7}],5:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":7,"./states/PlayState":8}],5:[function(require,module,exports){
+var Quest = require('./Quest');
+
+function Journal(game) {
+    'use strict';
+    this.quests = {
+        'open': [],
+        'failed': [],
+        'completed': []
+    };
+    this.init_events(game);
+}
+
+
+Journal.prototype.init_events = function (game) {
+    'use strict';
+    game.events.complete_quest = new Phaser.Signal();
+    game.events.complete_quest.add(this.complete_quest.bind(this));
+    game.events.fail_quest = new Phaser.Signal();
+    game.events.fail_quest.add(this.fail_quest.bind(this));
+    game.events.add_quest = new Phaser.Signal();
+    game.events.add_quest.add(this.add_quest.bind(this));
+};
+
+
+Journal.prototype.add_quest = function (quest) {
+    'use strict';
+    this.quests.open[quest.id] = quest;
+};
+
+
+Journal.prototype.complete_quest = function (id) {
+    'use strict';
+    if (!id) {
+        throw new Error('You must supply an id for a quest to complete.');
+    }
+    if (!this.quests.open[id]) {
+        throw new Error('Cannot complete quest with id "' + id + '" as it is not found.');
+    }
+    this.quests.completed.push(this.quests.open[id]);
+    delete this.quests.open[id];
+};
+
+
+Journal.prototype.fail_quest = function (id) {
+    'use strict';
+    if (!id) {
+        throw new Error('You must supply an id for a quest to fail.');
+    }
+    if (!this.quests.open[id]) {
+        throw new Error('Cannot fail quest with id "' + id + '" as it is not found.');
+    }
+    this.quests.failed.push(this.quests.open[id]);
+    delete this.quests.open[id];
+};
+
+
+module.exports = Journal;
+
+},{"./Quest":6}],6:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward) {
@@ -74,7 +131,7 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":8}],6:[function(require,module,exports){
+},{"../util/QuestUtil":9}],7:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
@@ -86,28 +143,29 @@ module.exports = {
     }
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var Player = require('../characters/Player');
 
 module.exports = {
     'create': function () {
         'use strict';
-        this.player = new Player();
+        if (!this.game.events) {
+            this.game.events = {};
+        }
+
+        this.player = new Player(this.game);
 
         this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
     },
     'update': function () {
         'use strict';
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-            console.log('fart');
-        }
     },
     'render': function () {
         'use strict';
     }
 };
 
-},{"../characters/Player":2}],8:[function(require,module,exports){
+},{"../characters/Player":2}],9:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
