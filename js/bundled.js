@@ -17,10 +17,18 @@ function Player(game) {
     'use strict';
     BaseCharacter.call(this);
 
+    this.coins = 0;
+    this.hp = 100;
+    this.mp = 100;
+
     this.inventory = [];
     this.journal = new Journal(game);
 
-    game.events.add_quest.dispatch(new Quest('test test', 'derp', 200));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'here is a bunch of text added to the journal'));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'more text added to journal'));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'yet more'));
+    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'this is the newest entry'));
+    this.journal.get_journal();
 }
 
 module.exports = Player;
@@ -40,7 +48,7 @@ window.onload = function () {
     window.g = new Phaser.Game(
         Config.WIDTH,
         Config.HEIGHT,
-        Phaser.CANVAS
+        Phaser.AUTO
     );
     window.g.state.add('load', require('./states/LoadingState'));
     window.g.state.add('play', require('./states/PlayState'));
@@ -51,31 +59,49 @@ window.onload = function () {
 },{"./conf/Config.js":3,"./states/LoadingState":7,"./states/PlayState":8}],5:[function(require,module,exports){
 var Quest = require('./Quest');
 
-function Journal(game) {
+function Journal() {
     'use strict';
     this.quests = {
         'open': [],
         'failed': [],
         'completed': []
     };
-    this.init_events(game);
+    this.journal = [];
 }
 
 
-Journal.prototype.init_events = function (game) {
+Journal.prototype.add_entry = function (text) {
     'use strict';
-    game.events.complete_quest = new Phaser.Signal();
-    game.events.complete_quest.add(this.complete_quest.bind(this));
-    game.events.fail_quest = new Phaser.Signal();
-    game.events.fail_quest.add(this.fail_quest.bind(this));
-    game.events.add_quest = new Phaser.Signal();
-    game.events.add_quest.add(this.add_quest.bind(this));
+    this.journal.push(text);
+};
+
+
+Journal.prototype.get_journal = function () {
+    'use strict';
+    for (var i = this.journal.length - 1; i >= 0; i--) {
+        console.log(this.journal[i]);
+    }
 };
 
 
 Journal.prototype.add_quest = function (quest) {
     'use strict';
-    this.quests.open[quest.id] = quest;
+    if (quest.journal_entry !== null) {
+        this.add_entry(quest.journal_entry);
+    }
+    this.quests.open.push(quest);
+};
+
+
+Journal.prototype.find_quest_index_by_id = function (id) {
+    'use strict';
+    var index = null;
+    for (var i = 0; i < this.quests.open.length; i++) {
+        if (this.quests.open[i].id === id) {
+            index = i;
+        }
+    }
+    return index;
 };
 
 
@@ -84,11 +110,13 @@ Journal.prototype.complete_quest = function (id) {
     if (!id) {
         throw new Error('You must supply an id for a quest to complete.');
     }
-    if (!this.quests.open[id]) {
+    var index = this.find_quest_index_by_id(id);
+    if (index === null) {
         throw new Error('Cannot complete quest with id "' + id + '" as it is not found.');
     }
-    this.quests.completed.push(this.quests.open[id]);
-    delete this.quests.open[id];
+    this.quests.open[index].complete();
+    this.quests.completed.push(this.quests.open[index]);
+    this.quests.open.splice(index, 1);
 };
 
 
@@ -97,11 +125,13 @@ Journal.prototype.fail_quest = function (id) {
     if (!id) {
         throw new Error('You must supply an id for a quest to fail.');
     }
-    if (!this.quests.open[id]) {
+    var index = this.find_quest_index_by_id(id);
+    if (index === null) {
         throw new Error('Cannot fail quest with id "' + id + '" as it is not found.');
     }
-    this.quests.failed.push(this.quests.open[id]);
-    delete this.quests.open[id];
+    this.quests.open[index].fail();
+    this.quests.failed.push(this.quests.open[index]);
+    this.quests.open.splice(index, 1);
 };
 
 
@@ -110,7 +140,7 @@ module.exports = Journal;
 },{"./Quest":6}],6:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
-function Quest(name, description, xp_reward, item_reward) {
+function Quest(name, description, xp_reward, item_reward, journal_entry) {
     'use strict';
     this.name = name;
     this.description = description;
@@ -118,15 +148,20 @@ function Quest(name, description, xp_reward, item_reward) {
     this.item_reward = item_reward
         ? item_reward
         : null;
+    this.journal_entry = journal_entry
+        ? journal_entry
+        : null;
     this.id = QuestUtil.generate_quest_id(this.name);
 }
 
 Quest.prototype.complete = function () {
     'use strict';
+    console.log('completed quest: ', this);
 };
 
 Quest.prototype.fail = function () {
     'use strict';
+    console.log('failed quest: ', this);
 };
 
 module.exports = Quest;
@@ -149,13 +184,7 @@ var Player = require('../characters/Player');
 module.exports = {
     'create': function () {
         'use strict';
-        if (!this.game.events) {
-            this.game.events = {};
-        }
-
         this.player = new Player(this.game);
-
-        this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
     },
     'update': function () {
         'use strict';
