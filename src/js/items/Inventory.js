@@ -17,6 +17,7 @@ Inventory.prototype.drop = function (slot) {
     return item;
 };
 
+
 Inventory.prototype.add = function (item, slot) {
     'use strict';
     if (!item) {
