@@ -3,6 +3,8 @@ var Config = require('./conf/Config.js');
 // Bootstrap phaser and states
 window.onload = function () {
     'use strict';
+    document.title = Config.TITLE + ' v' + Config.VERSION;
+
     window.g = new Phaser.Game(
         Config.WIDTH,
         Config.HEIGHT,
