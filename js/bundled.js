@@ -9,6 +9,7 @@ module.exports = BaseCharacter;
 var BaseCharacter = require('./BaseCharacter');
 var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
+var Inventory = require('../items/Inventory');
 
 Player.prototype = BaseCharacter;
 Player.prototype.constructor = Player;
@@ -20,20 +21,15 @@ function Player(game) {
     this.coins = 0;
     this.hp = 100;
     this.mp = 100;
+    this.xp = 0;
 
-    this.inventory = [];
-    this.journal = new Journal(game);
-
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'here is a bunch of text added to the journal'));
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'more text added to journal'));
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'yet more'));
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'this is the newest entry'));
-    this.journal.get_journal();
+    this.inventory = new Inventory(12);
+    this.journal = new Journal();
 }
 
 module.exports = Player;
 
-},{"../quest/Journal":5,"../quest/Quest":6,"./BaseCharacter":1}],3:[function(require,module,exports){
+},{"../items/Inventory":5,"../quest/Journal":6,"../quest/Quest":7,"./BaseCharacter":1}],3:[function(require,module,exports){
 module.exports = {
     'WIDTH': 800,
     'HEIGHT': 600
@@ -56,7 +52,71 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":7,"./states/PlayState":8}],5:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":8,"./states/PlayState":9}],5:[function(require,module,exports){
+function Inventory(size) {
+    'use strict';
+    // Yeah, correct the size for 0 indexing
+    this.size = size - 1;
+    this.items = new Array(size - 1);
+    this.weight = 0.0;
+    this._item_buffer = undefined;
+}
+
+Inventory.prototype.drop = function (slot) {
+    'use strict';
+    if (!slot) {
+        throw new Error('No slot defined, cannot drop item.');
+    }
+    var item = this.items[slot];
+    this.items[slot] = undefined;
+    return item;
+};
+
+Inventory.prototype.add = function (item, slot) {
+    'use strict';
+    if (!item) {
+        throw new Error('Cannot add item to inventory as no item supplied.');
+    }
+    if (!slot) {
+        var s = this.find_empty_slot();
+        if (s !== null) {
+            this.items[s] = item;
+        } else {
+            console.log('No free slot found, inventory full!');
+        }
+    } else {
+        if (slot > this.size) {
+            throw new Error('Attempted to add item to slot ' + slot + ' but that is beyond the inventory size.');
+        }
+        if (this.items[slot] !== undefined) {
+            throw new Error('Cannot add item to slot ' + slot + ' as there is already an item there.');
+        } else {
+            this.items[slot] = item;
+        }
+    }
+};
+
+
+Inventory.prototype.find_empty_slot = function () {
+    'use strict';
+    for (var i = 0; i < this.items.length; i++) {
+        if (this.items[i] === undefined) {
+            return i;
+        }
+    }
+    return null;
+};
+
+
+Inventory.prototype.list = function () {
+    'use strict';
+    console.log(this.items);
+};
+
+
+module.exports = Inventory;
+
+},{}],6:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -137,7 +197,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":6}],6:[function(require,module,exports){
+},{"./Quest":7}],7:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -166,7 +226,7 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":9}],7:[function(require,module,exports){
+},{"../util/QuestUtil":10}],8:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
@@ -178,7 +238,7 @@ module.exports = {
     }
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Player = require('../characters/Player');
 
 module.exports = {
@@ -194,7 +254,7 @@ module.exports = {
     }
 };
 
-},{"../characters/Player":2}],9:[function(require,module,exports){
+},{"../characters/Player":2}],10:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
