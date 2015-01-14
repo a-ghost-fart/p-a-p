@@ -1,3 +1,8 @@
 body {
+    background: #000;
+}
 
+canvas {
+    // Literally two css rules and already important!
+    cursor: none !important;
 }
