@@ -12,7 +12,7 @@ module.exports = {
         this.world = {};
         this.world.map = this.game.add.tilemap('test_map');
         this.world.map.addTilesetImage('test_tileset', 'test_tiles');
-        this.world.map.setCollision(4);
+        this.world.map.setCollisionBetween(81, 85);
         this.world.layer = this.world.map.createLayer('derp');
 
         this.player = new Player(this.game);
