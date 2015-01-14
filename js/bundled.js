@@ -52,6 +52,8 @@ module.exports = Player;
 
 },{"../items/Inventory":5,"../quest/Journal":6,"../quest/Quest":7,"./BaseCharacter":1}],3:[function(require,module,exports){
 module.exports = {
+    'TITLE': 'Something in phaser.',
+    'VERSION': '0.0.1',
     'WIDTH': 800,
     'HEIGHT': 600
 };
@@ -62,6 +64,8 @@ var Config = require('./conf/Config.js');
 // Bootstrap phaser and states
 window.onload = function () {
     'use strict';
+    document.title = Config.TITLE + ' v' + Config.VERSION;
+
     window.g = new Phaser.Game(
         Config.WIDTH,
         Config.HEIGHT,
