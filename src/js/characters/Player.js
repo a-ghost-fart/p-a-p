@@ -1,6 +1,7 @@
 var BaseCharacter = require('./BaseCharacter');
 var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
+var Inventory = require('../items/Inventory');
 
 Player.prototype = BaseCharacter;
 Player.prototype.constructor = Player;
@@ -12,15 +13,10 @@ function Player(game) {
     this.coins = 0;
     this.hp = 100;
     this.mp = 100;
+    this.xp = 0;
 
-    this.inventory = [];
-    this.journal = new Journal(game);
-
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'here is a bunch of text added to the journal'));
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'more text added to journal'));
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'yet more'));
-    this.journal.add_quest(new Quest('test', 'this is a description', 100, null, 'this is the newest entry'));
-    this.journal.get_journal();
+    this.inventory = new Inventory(12);
+    this.journal = new Journal();
 }
 
 module.exports = Player;
