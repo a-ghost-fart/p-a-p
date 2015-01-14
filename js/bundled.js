@@ -3,6 +3,14 @@ function BaseCharacter() {
     'use strict';
 }
 
+BaseCharacter.prototype.update = function () {
+
+};
+
+BaseCharacter.prototype.render = function () {
+
+};
+
 module.exports = BaseCharacter;
 
 },{}],2:[function(require,module,exports){
@@ -11,7 +19,7 @@ var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
 
-Player.prototype = BaseCharacter;
+Player.prototype = new BaseCharacter();
 Player.prototype.constructor = Player;
 
 function Player(game) {
@@ -22,9 +30,22 @@ function Player(game) {
     this.hp = 100;
     this.mp = 100;
     this.xp = 0;
+    this.stats = {
+        'endurance': null,
+        'power': null,
+        'speed': null,
+        'psi': null
+    };
+
+    this.sprite = game.add.sprite(32, 32, 'test');
+    game.physics.arcade.enable(this.sprite);
+    this.sprite.body.bounce.y = 0.2;
+    this.sprite.body.gravity.y = 300;
+    this.sprite.anchor.setTo(0.5, 0.5);
 
     this.inventory = new Inventory(12);
     this.journal = new Journal();
+    this.abilities = [];
 }
 
 module.exports = Player;
@@ -71,6 +92,7 @@ Inventory.prototype.drop = function (slot) {
     this.items[slot] = undefined;
     return item;
 };
+
 
 Inventory.prototype.add = function (item, slot) {
     'use strict';
@@ -231,6 +253,10 @@ module.exports = {
     'preload': function () {
         'use strict';
         this.load.image('test', 'assets/sprites/test_player.png');
+        this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
+        this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
+
+        this.load.tilemap('test_map', 'assets/maps/test.json', null, Phaser.Tilemap.TILED_JSON);
     },
     'create': function () {
         'use strict';
@@ -244,13 +270,55 @@ var Player = require('../characters/Player');
 module.exports = {
     'create': function () {
         'use strict';
+        var background = this.game.add.tileSprite(0, 0, 800, 600, 'test_bg');
+        background.fixedToCamera = true;
+
+        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+        this.game.world.setBounds(0, 0, 1120, 800);
+
+        this.world = {};
+        this.world.map = this.game.add.tilemap('test_map');
+        this.world.map.addTilesetImage('test_tileset', 'test_tiles');
+        this.world.map.setCollision(4);
+        this.world.layer = this.world.map.createLayer('derp');
+
         this.player = new Player(this.game);
+
+        this.game.camera.follow(this.player.sprite, Phaser.Camera.STYLE_TOPDOWN);
+
+        this.entities = [];
+        this.entities.push(this.player);
+
+        this.cursors = this.game.input.keyboard.createCursorKeys();
     },
     'update': function () {
         'use strict';
+        this.entities.forEach(function (entity) {
+            entity.update();
+        });
+
+        this.game.physics.arcade.collide(this.player.sprite, this.world.layer);
+
+        this.player.sprite.body.velocity.x = 0;
+        this.player.sprite.angle = 0;
+
+        if (this.cursors.left.isDown) {
+            this.player.sprite.body.velocity.x = -150;
+            this.player.sprite.angle = -10;
+        }
+        if (this.cursors.right.isDown) {
+            this.player.sprite.body.velocity.x = 150;
+            this.player.sprite.angle = 10;
+        }
+        if (this.cursors.up.isDown && this.player.sprite.body.onFloor()) {
+            this.player.sprite.body.velocity.y = -350;
+        }
     },
     'render': function () {
         'use strict';
+        this.entities.forEach(function (entity) {
+            entity.render();
+        });
     }
 };
 
