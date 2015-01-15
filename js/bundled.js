@@ -18,6 +18,7 @@ var BaseCharacter = require('./BaseCharacter');
 var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
+var PlayerArms = require('./PlayerArms');
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
@@ -37,6 +38,9 @@ function Player(game, x, y) {
         'psi': null
     };
 
+    this.arms = new PlayerArms(game, x, y);
+    this.addChild(this.arms);
+
     this.inventory = new Inventory(12);
     this.journal = new Journal();
     this.abilities = [];
@@ -54,7 +58,19 @@ Player.prototype.enable_physics = function (game) {
 
 module.exports = Player;
 
-},{"../items/Inventory":6,"../quest/Journal":8,"../quest/Quest":9,"./BaseCharacter":1}],3:[function(require,module,exports){
+},{"../items/Inventory":7,"../quest/Journal":9,"../quest/Quest":10,"./BaseCharacter":1,"./PlayerArms":3}],3:[function(require,module,exports){
+PlayerArms.prototype = Object.create(Phaser.Sprite.prototype);
+PlayerArms.prototype.constructor = PlayerArms;
+
+function PlayerArms(game, x, y) {
+    'use strict';
+    Phaser.Sprite.call(this, game, x, y, 'test_arms');
+    this.anchor.setTo(0.5, 0.5);
+}
+
+module.exports = PlayerArms;
+
+},{}],4:[function(require,module,exports){
 module.exports = {
     'TITLE': 'Something in phaser.',
     'VERSION': '0.0.1',
@@ -62,7 +78,7 @@ module.exports = {
     'HEIGHT': 600
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 module.exports = {
     'ARMOUR': 0,
     'WEAPON': 1,
@@ -70,7 +86,7 @@ module.exports = {
     'CONSUMABLE': 3
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var Config = require('./conf/Config.js');
 
 // Bootstrap phaser and states
@@ -89,7 +105,7 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":10,"./states/PlayState":11}],6:[function(require,module,exports){
+},{"./conf/Config.js":4,"./states/LoadingState":11,"./states/PlayState":12}],7:[function(require,module,exports){
 var ItemType = require('../enum/ItemType');
 
 function Inventory(size) {
@@ -190,7 +206,7 @@ Inventory.prototype.list = function () {
 
 module.exports = Inventory;
 
-},{"../enum/ItemType":4}],7:[function(require,module,exports){
+},{"../enum/ItemType":5}],8:[function(require,module,exports){
 var ItemUtil = require('../util/ItemUtil');
 
 Item.prototype = Object.create(Phaser.Sprite.prototype);
@@ -218,7 +234,7 @@ Item.prototype.enable_physics = function (game) {
 
 module.exports = Item;
 
-},{"../util/ItemUtil":12}],8:[function(require,module,exports){
+},{"../util/ItemUtil":13}],9:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -299,7 +315,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":9}],9:[function(require,module,exports){
+},{"./Quest":10}],10:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -328,11 +344,12 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":13}],10:[function(require,module,exports){
+},{"../util/QuestUtil":14}],11:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
         this.load.image('test', 'assets/sprites/test_player.png');
+        this.load.image('test_arms', 'assets/sprites/test_arms.png');
         this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
         this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
         this.load.image('test_item', 'assets/sprites/test_item.png');
@@ -349,7 +366,7 @@ module.exports = {
     }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
 
@@ -428,7 +445,7 @@ module.exports = {
     }
 };
 
-},{"../characters/Player":2,"../items/Item":7}],12:[function(require,module,exports){
+},{"../characters/Player":2,"../items/Item":8}],13:[function(require,module,exports){
 module.exports = {
     'generate_item_id': function (seed) {
         'use strict';
@@ -441,7 +458,7 @@ module.exports = {
     }
 };
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
@@ -454,4 +471,4 @@ module.exports = {
     }
 };
 
-},{}]},{},[5])
+},{}]},{},[6])
