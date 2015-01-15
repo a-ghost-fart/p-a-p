@@ -19,12 +19,12 @@ var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
 
-Player.prototype = new BaseCharacter();
+Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
-function Player(game) {
+function Player(game, x, y) {
     'use strict';
-    BaseCharacter.call(this);
+    Phaser.Sprite.call(this, game, x, y, 'test');
 
     this.coins = 0;
     this.hp = 100;
@@ -37,20 +37,24 @@ function Player(game) {
         'psi': null
     };
 
-    this.sprite = game.add.sprite(32, 32, 'test');
-    game.physics.arcade.enable(this.sprite);
-    this.sprite.body.bounce.y = 0.2;
-    this.sprite.body.gravity.y = 300;
-    this.sprite.anchor.setTo(0.5, 0.5);
-
     this.inventory = new Inventory(12);
     this.journal = new Journal();
     this.abilities = [];
+
+    this.enable_physics(game);
 }
+
+Player.prototype.enable_physics = function (game) {
+    'use strict';
+    game.physics.arcade.enable(this);
+    this.body.bounce.y = 0.2;
+    this.body.gravity.y = 300;
+    this.anchor.setTo(0.5, 0.5);
+};
 
 module.exports = Player;
 
-},{"../items/Inventory":6,"../quest/Journal":7,"../quest/Quest":8,"./BaseCharacter":1}],3:[function(require,module,exports){
+},{"../items/Inventory":6,"../quest/Journal":8,"../quest/Quest":9,"./BaseCharacter":1}],3:[function(require,module,exports){
 module.exports = {
     'TITLE': 'Something in phaser.',
     'VERSION': '0.0.1',
@@ -85,7 +89,7 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":9,"./states/PlayState":10}],6:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":10,"./states/PlayState":11}],6:[function(require,module,exports){
 var ItemType = require('../enum/ItemType');
 
 function Inventory(size) {
@@ -187,6 +191,24 @@ Inventory.prototype.list = function () {
 module.exports = Inventory;
 
 },{"../enum/ItemType":4}],7:[function(require,module,exports){
+var ItemUtil = require('../util/ItemUtil');
+
+Item.prototype = Object.create(Phaser.Sprite.prototype);
+Item.prototype.constructor = Item;
+
+function Item(game, x, y, item_props) {
+    'use strict';
+    Phaser.Sprite.call(this, game, x, y, 'test_item');
+    this.name = item_props.name;
+    this.description = item_props.description;
+    this.stats = item_props.stats;
+    this.weight = item_props.weight;
+    this.type = item_props.type;
+}
+
+module.exports = Item;
+
+},{"../util/ItemUtil":12}],8:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -267,7 +289,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":8}],8:[function(require,module,exports){
+},{"./Quest":9}],9:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -296,13 +318,14 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":11}],9:[function(require,module,exports){
+},{"../util/QuestUtil":13}],10:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
         this.load.image('test', 'assets/sprites/test_player.png');
         this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
         this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
+        this.load.image('test_item', 'assets/sprites/test_item.png');
 
         this.load.spritesheet('test_button', 'assets/ui/test_button.png', 64, 32);
 
@@ -316,8 +339,9 @@ module.exports = {
     }
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var Player = require('../characters/Player');
+var Item = require('../items/Item');
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -329,7 +353,7 @@ module.exports = {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.game.world.setBounds(0, 0, 1120, 800);
 
-        // Import and set up tilemaps
+        // Import and set up tilemaps   
         this.world = {};
         this.world.map = this.game.add.tilemap('test_map');
         this.world.map.addTilesetImage('test_tileset', 'test_tiles');
@@ -337,56 +361,76 @@ module.exports = {
         this.world.layer = this.world.map.createLayer('derp');
         this.world.layer.resizeWorld();
 
+        var item = new Item(this.game, 300, 300, {
+            'name': 'test item',
+            'description': 'something something',
+            'stats': {},
+            'type': 2,
+            'weight': 0.0
+        });
+        this.interactables = this.game.add.group();
+        this.interactables.enableBody = true;
+        this.interactables.add(item);
+
         this.world.collision_layer = this.world.map.createLayer('collision');
         this.world.map.setCollision(179, true, this.world.collision_layer);
         this.world.collision_layer.resizeWorld();
 
-        this.player = new Player(this.game);
+        this.player = new Player(this.game, 10, 10);
         this.player.inventory.init_ui(this.game);
+        this.game.add.existing(this.player);
 
-        this.game.camera.follow(this.player.sprite, Phaser.Camera.STYLE_TOPDOWN);
+        this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
 
-        this.entities = [];
-        this.entities.push(this.player);
-
+        // Remove
         var bmpText = this.game.add.bitmapText(200, 100, 'bitmap_font', 'SOMETHING', 12);
         bmpText.fixedToCamera = true;
     },
 
     'update': function () {
         'use strict';
-        this.entities.forEach(function (entity) {
-            entity.update();
+        // Collide with the collision layer
+        this.game.physics.arcade.collide(this.player, this.world.collision_layer);
+        this.game.physics.arcade.overlap(this.player, this.interactables, function (player, interactable) {
+            player.inventory.add(interactable);
+            interactable.destroy();
         });
 
-        // Collide with the collision layer
-        this.game.physics.arcade.collide(this.player.sprite, this.world.collision_layer);
-
-        this.player.sprite.body.velocity.x = 0;
-        this.player.sprite.angle = 0;
+        this.player.body.velocity.x = 0;
+        this.player.angle = 0;
 
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-            this.player.sprite.body.velocity.x = -150;
-            this.player.sprite.angle = -10;
+            this.player.body.velocity.x = -150;
+            this.player.angle = -10;
         }
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-            this.player.sprite.body.velocity.x = 150;
-            this.player.sprite.angle = 10;
+            this.player.body.velocity.x = 150;
+            this.player.angle = 10;
         }
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.sprite.body.onFloor()) {
-            this.player.sprite.body.velocity.y = -350;
+        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.body.onFloor()) {
+            this.player.body.velocity.y = -350;
         }
     },
 
     'render': function () {
         'use strict';
-        this.entities.forEach(function (entity) {
-            entity.render();
-        });
     }
 };
 
-},{"../characters/Player":2}],11:[function(require,module,exports){
+},{"../characters/Player":2,"../items/Item":7}],12:[function(require,module,exports){
+module.exports = {
+    'generate_item_id': function (seed) {
+        'use strict';
+        var id = 'i-';
+        for (var i = 0; i < seed.length; i++) {
+            id += seed.charCodeAt(i).toString(16);
+        }
+        id += '-' + (Math.random(seed) * 999999999).toFixed(0).toString(16);
+        return id;
+    }
+};
+
+},{}],13:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
