@@ -1,5 +1,6 @@
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
+var Projectile = require('../projectiles/Projectile');
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -29,6 +30,15 @@ module.exports = {
         this.interactables = this.game.add.group();
         this.interactables.enableBody = true;
         this.interactables.add(item);
+
+        this.projectiles = this.game.add.group();
+        this.projectiles.enableBody = true;
+        this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
+        this.projectiles.createMultiple(20, 'test_projectile', 0, false);
+        this.projectiles.setAll('anchor.x', 0.5);
+        this.projectiles.setAll('anchor.y', 0.5);
+        this.projectiles.setAll('outOfBoundsKill', true);
+        this.projectiles.setAll('checkWorldBounds', true);
 
         this.world.collision_layer = this.world.map.createLayer('collision');
         this.world.map.setCollision(179, true, this.world.collision_layer);
@@ -69,6 +79,13 @@ module.exports = {
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.body.onFloor()) {
             this.player.body.velocity.y = -350;
         }
+
+        if (this.game.input.activePointer === 1) {
+            var bullet = this.projectiles.getFirstDead();
+            bullet.reset(this.player.x, this.player.y);
+            bullet.rotation = this.game.physics.arcade.moveToObject(this, this.game.input.activePointer, 500);
+        };
+
     },
 
     'render': function () {

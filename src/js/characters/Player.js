@@ -35,9 +35,10 @@ function Player(game, x, y) {
 Player.prototype.enable_physics = function (game) {
     'use strict';
     game.physics.arcade.enable(this);
-    this.body.bounce.y = 0.2;
-    this.body.gravity.y = 300;
+    this.body.bounce.y = 0;
+    this.body.gravity.y = 450;
     this.anchor.setTo(0.5, 0.5);
+    this.body.collideWorldBounds = true;
 };
 
 module.exports = Player;
