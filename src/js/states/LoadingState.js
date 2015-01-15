@@ -2,6 +2,7 @@ module.exports = {
     'preload': function () {
         'use strict';
         this.load.image('test', 'assets/sprites/test_player.png');
+        this.load.image('test_arms', 'assets/sprites/test_arms.png');
         this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
         this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
         this.load.image('test_item', 'assets/sprites/test_item.png');

@@ -2,6 +2,7 @@ var BaseCharacter = require('./BaseCharacter');
 var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
+var PlayerArms = require('./PlayerArms');
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
@@ -20,6 +21,9 @@ function Player(game, x, y) {
         'speed': null,
         'psi': null
     };
+
+    this.arms = new PlayerArms(game, x, y);
+    this.addChild(this.arms);
 
     this.inventory = new Inventory(12);
     this.journal = new Journal();
