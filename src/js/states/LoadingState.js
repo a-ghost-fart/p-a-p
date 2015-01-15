@@ -12,6 +12,7 @@ module.exports = {
         this.load.tilemap('test_map', 'assets/maps/test.json', null, Phaser.Tilemap.TILED_JSON);
 
         this.load.image('base_player', 'assets/sprites/base_player.png');
+        this.load.spritesheet('idle_anim', 'assets/sprites/idle_animation.png', 14, 48, 12);
         this.load.bitmapFont('bitmap_font', 'assets/ui/font.png', 'assets/ui/font.xml');
 
     },

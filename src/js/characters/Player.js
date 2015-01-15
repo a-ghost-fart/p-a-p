@@ -8,7 +8,10 @@ Player.prototype.constructor = Player;
 
 function Player(game, x, y) {
     'use strict';
-    Phaser.Sprite.call(this, game, x, y, 'base_player');
+    Phaser.Sprite.call(this, game, x, y, 'idle_anim', 5);
+
+    this.animations.add('walk');
+    this.animations.play('walk', 12, true);
 
     this.coins = 0;
     this.hp = 100;
