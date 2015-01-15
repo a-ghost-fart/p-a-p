@@ -457,11 +457,11 @@ module.exports = {
         this.player.angle = 0;
 
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-            this.player.body.velocity.x = -150;
+            this.player.body.velocity.x = -250;
             this.player.angle = -10;
         }
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-            this.player.body.velocity.x = 150;
+            this.player.body.velocity.x = 250;
             this.player.angle = 10;
         }
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.body.onFloor()) {
@@ -472,7 +472,7 @@ module.exports = {
             var bullet = this.projectiles.getFirstDead();
             bullet.reset(this.player.x, this.player.y);
             bullet.rotation = this.game.physics.arcade.moveToObject(this, this.game.input.activePointer, 500);
-        };
+        }
 
     },
 
