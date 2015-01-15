@@ -204,7 +204,17 @@ function Item(game, x, y, item_props) {
     this.stats = item_props.stats;
     this.weight = item_props.weight;
     this.type = item_props.type;
+
+    this.enable_physics(game);
 }
+
+Item.prototype.enable_physics = function (game) {
+    'use strict';
+    game.physics.arcade.enable(this);
+    this.body.bounce.y = 0.5;
+    this.body.gravity.y = 300;
+    this.anchor.setTo(0.5, 0.5);
+};
 
 module.exports = Item;
 
@@ -391,6 +401,7 @@ module.exports = {
         'use strict';
         // Collide with the collision layer
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
+        this.game.physics.arcade.collide(this.interactables, this.world.collision_layer);
         this.game.physics.arcade.overlap(this.player, this.interactables, function (player, interactable) {
             player.inventory.add(interactable);
             interactable.destroy();

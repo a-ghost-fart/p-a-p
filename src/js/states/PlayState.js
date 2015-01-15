@@ -49,6 +49,7 @@ module.exports = {
         'use strict';
         // Collide with the collision layer
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
+        this.game.physics.arcade.collide(this.interactables, this.world.collision_layer);
         this.game.physics.arcade.overlap(this.player, this.interactables, function (player, interactable) {
             player.inventory.add(interactable);
             interactable.destroy();
