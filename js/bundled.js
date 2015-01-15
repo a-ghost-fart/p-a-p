@@ -1,20 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-function BaseCharacter() {
-    'use strict';
-}
-
-BaseCharacter.prototype.update = function () {
-
-};
-
-BaseCharacter.prototype.render = function () {
-
-};
-
-module.exports = BaseCharacter;
-
-},{}],2:[function(require,module,exports){
-var BaseCharacter = require('./BaseCharacter');
 var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
@@ -25,7 +9,7 @@ Player.prototype.constructor = Player;
 
 function Player(game, x, y) {
     'use strict';
-    Phaser.Sprite.call(this, game, x, y, 'test');
+    Phaser.Sprite.call(this, game, x, y, 'base_player');
 
     this.coins = 0;
     this.hp = 100;
@@ -39,7 +23,7 @@ function Player(game, x, y) {
     };
 
     this.arms = new PlayerArms(game, x, y);
-    this.addChild(this.arms);
+    //this.addChild(this.arms);
 
     this.inventory = new Inventory(12);
     this.journal = new Journal();
@@ -59,7 +43,7 @@ Player.prototype.enable_physics = function (game) {
 
 module.exports = Player;
 
-},{"../items/Inventory":7,"../quest/Journal":10,"../quest/Quest":11,"./BaseCharacter":1,"./PlayerArms":3}],3:[function(require,module,exports){
+},{"../items/Inventory":6,"../quest/Journal":9,"../quest/Quest":10,"./PlayerArms":2}],2:[function(require,module,exports){
 PlayerArms.prototype = Object.create(Phaser.Sprite.prototype);
 PlayerArms.prototype.constructor = PlayerArms;
 
@@ -71,7 +55,7 @@ function PlayerArms(game, x, y) {
 
 module.exports = PlayerArms;
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 module.exports = {
     'TITLE': 'Something in phaser.',
     'VERSION': '0.0.1',
@@ -79,7 +63,7 @@ module.exports = {
     'HEIGHT': 600
 };
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 module.exports = {
     'ARMOUR': 0,
     'WEAPON': 1,
@@ -87,7 +71,7 @@ module.exports = {
     'CONSUMABLE': 3
 };
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var Config = require('./conf/Config.js');
 
 // Bootstrap phaser and states
@@ -106,7 +90,7 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":4,"./states/LoadingState":12,"./states/PlayState":13}],7:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":11,"./states/PlayState":12}],6:[function(require,module,exports){
 var ItemType = require('../enum/ItemType');
 
 function Inventory(size) {
@@ -207,7 +191,7 @@ Inventory.prototype.list = function () {
 
 module.exports = Inventory;
 
-},{"../enum/ItemType":5}],8:[function(require,module,exports){
+},{"../enum/ItemType":4}],7:[function(require,module,exports){
 var ItemUtil = require('../util/ItemUtil');
 
 Item.prototype = Object.create(Phaser.Sprite.prototype);
@@ -235,7 +219,7 @@ Item.prototype.enable_physics = function (game) {
 
 module.exports = Item;
 
-},{"../util/ItemUtil":14}],9:[function(require,module,exports){
+},{"../util/ItemUtil":13}],8:[function(require,module,exports){
 Projectile.prototype = Object.create(Phaser.Sprite.prototype);
 Projectile.prototype.constructor = Projectile;
 
@@ -252,7 +236,7 @@ Projectile.prototype.fire = function (game, target) {
 
 module.exports = Projectile;
 
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -333,7 +317,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":11}],11:[function(require,module,exports){
+},{"./Quest":10}],10:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -362,22 +346,23 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":15}],12:[function(require,module,exports){
+},{"../util/QuestUtil":14}],11:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
+        // Test assets
         this.load.image('test', 'assets/sprites/test_player.png');
         this.load.image('test_arms', 'assets/sprites/test_arms.png');
         this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
         this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
         this.load.image('test_item', 'assets/sprites/test_item.png');
         this.load.image('test_projectile', 'assets/sprites/test_projectile.png');
-
         this.load.spritesheet('test_button', 'assets/ui/test_button.png', 64, 32);
+        this.load.tilemap('test_map', 'assets/maps/test.json', null, Phaser.Tilemap.TILED_JSON);
 
+        this.load.image('base_player', 'assets/sprites/base_player.png');
         this.load.bitmapFont('bitmap_font', 'assets/ui/font.png', 'assets/ui/font.xml');
 
-        this.load.tilemap('test_map', 'assets/maps/test.json', null, Phaser.Tilemap.TILED_JSON);
     },
     'create': function () {
         'use strict';
@@ -385,7 +370,7 @@ module.exports = {
     }
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
 var Projectile = require('../projectiles/Projectile');
@@ -394,10 +379,25 @@ var Projectile = require('../projectiles/Projectile');
 module.exports = {
     'create': function () {
         'use strict';
+        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+        this.init_world();
+        this.init_collections(this.game);
+        this.init_character();
+    },
+
+    'init_player': function () {
+        'use strict';
+        this.player = new Player(this.game, 10, 10);
+        this.player.inventory.init_ui(this.game);
+        this.game.add.existing(this.player);
+        this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
+    },
+
+    'init_world': function () {
+        'use strict';
         var background = this.game.add.tileSprite(0, 0, 800, 600, 'test_bg');
         background.fixedToCamera = true;
 
-        this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.game.world.setBounds(0, 0, 1120, 800);
 
         // Import and set up tilemaps   
@@ -408,6 +408,14 @@ module.exports = {
         this.world.layer = this.world.map.createLayer('derp');
         this.world.layer.resizeWorld();
 
+        this.world.collision_layer = this.world.map.createLayer('collision');
+        this.world.map.setCollision(179, true, this.world.collision_layer);
+        this.world.collision_layer.resizeWorld();
+    },
+
+    'init_collections': function (game) {
+        'use strict';
+
         var item = new Item(this.game, 300, 300, {
             'name': 'test item',
             'description': 'something something',
@@ -415,40 +423,17 @@ module.exports = {
             'type': 2,
             'weight': 0.0
         });
-        this.interactables = this.game.add.group();
-        this.interactables.enableBody = true;
-        this.interactables.add(item);
-
-        this.projectiles = this.game.add.group();
-        this.projectiles.enableBody = true;
-        this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
-        this.projectiles.createMultiple(20, 'test_projectile', 0, false);
-        this.projectiles.setAll('anchor.x', 0.5);
-        this.projectiles.setAll('anchor.y', 0.5);
-        this.projectiles.setAll('outOfBoundsKill', true);
-        this.projectiles.setAll('checkWorldBounds', true);
-
-        this.world.collision_layer = this.world.map.createLayer('collision');
-        this.world.map.setCollision(179, true, this.world.collision_layer);
-        this.world.collision_layer.resizeWorld();
-
-        this.player = new Player(this.game, 10, 10);
-        this.player.inventory.init_ui(this.game);
-        this.game.add.existing(this.player);
-
-        this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
-
-        // Remove
-        var bmpText = this.game.add.bitmapText(200, 100, 'bitmap_font', 'SOMETHING', 12);
-        bmpText.fixedToCamera = true;
+        this.collectables = this.game.add.group();
+        this.collectables.enableBody = true;
+        this.collectables.add(item);
     },
 
     'update': function () {
         'use strict';
         // Collide with the collision layer
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
-        this.game.physics.arcade.collide(this.interactables, this.world.collision_layer);
-        this.game.physics.arcade.overlap(this.player, this.interactables, function (player, interactable) {
+        this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
+        this.game.physics.arcade.overlap(this.player, this.collectables, function (player, interactable) {
             player.inventory.add(interactable);
             interactable.destroy();
         });
@@ -468,12 +453,6 @@ module.exports = {
             this.player.body.velocity.y = -350;
         }
 
-        if (this.game.input.activePointer === 1) {
-            var bullet = this.projectiles.getFirstDead();
-            bullet.reset(this.player.x, this.player.y);
-            bullet.rotation = this.game.physics.arcade.moveToObject(this, this.game.input.activePointer, 500);
-        }
-
     },
 
     'render': function () {
@@ -481,7 +460,7 @@ module.exports = {
     }
 };
 
-},{"../characters/Player":2,"../items/Item":8,"../projectiles/Projectile":9}],14:[function(require,module,exports){
+},{"../characters/Player":1,"../items/Item":7,"../projectiles/Projectile":8}],13:[function(require,module,exports){
 module.exports = {
     'generate_item_id': function (seed) {
         'use strict';
@@ -494,7 +473,7 @@ module.exports = {
     }
 };
 
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
@@ -507,4 +486,4 @@ module.exports = {
     }
 };
 
-},{}]},{},[6])
+},{}]},{},[5])
