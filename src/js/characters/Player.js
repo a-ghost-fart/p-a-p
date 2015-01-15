@@ -3,12 +3,12 @@ var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
 
-Player.prototype = new BaseCharacter();
+Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
-function Player(game) {
+function Player(game, x, y) {
     'use strict';
-    BaseCharacter.call(this);
+    Phaser.Sprite.call(this, game, x, y, 'test');
 
     this.coins = 0;
     this.hp = 100;
@@ -21,15 +21,19 @@ function Player(game) {
         'psi': null
     };
 
-    this.sprite = game.add.sprite(32, 32, 'test');
-    game.physics.arcade.enable(this.sprite);
-    this.sprite.body.bounce.y = 0.2;
-    this.sprite.body.gravity.y = 300;
-    this.sprite.anchor.setTo(0.5, 0.5);
-
     this.inventory = new Inventory(12);
     this.journal = new Journal();
     this.abilities = [];
+
+    this.enable_physics(game);
 }
+
+Player.prototype.enable_physics = function (game) {
+    'use strict';
+    game.physics.arcade.enable(this);
+    this.body.bounce.y = 0.2;
+    this.body.gravity.y = 300;
+    this.anchor.setTo(0.5, 0.5);
+};
 
 module.exports = Player;

@@ -1,4 +1,5 @@
 var Player = require('../characters/Player');
+var Item = require('../items/Item');
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -10,7 +11,7 @@ module.exports = {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.game.world.setBounds(0, 0, 1120, 800);
 
-        // Import and set up tilemaps
+        // Import and set up tilemaps   
         this.world = {};
         this.world.map = this.game.add.tilemap('test_map');
         this.world.map.addTilesetImage('test_tileset', 'test_tiles');
@@ -18,51 +19,58 @@ module.exports = {
         this.world.layer = this.world.map.createLayer('derp');
         this.world.layer.resizeWorld();
 
+        var item = new Item(this.game, 300, 300, {
+            'name': 'test item',
+            'description': 'something something',
+            'stats': {},
+            'type': 2,
+            'weight': 0.0
+        });
+        this.interactables = this.game.add.group();
+        this.interactables.enableBody = true;
+        this.interactables.add(item);
+
         this.world.collision_layer = this.world.map.createLayer('collision');
         this.world.map.setCollision(179, true, this.world.collision_layer);
         this.world.collision_layer.resizeWorld();
 
-        this.player = new Player(this.game);
+        this.player = new Player(this.game, 10, 10);
         this.player.inventory.init_ui(this.game);
+        this.game.add.existing(this.player);
 
-        this.game.camera.follow(this.player.sprite, Phaser.Camera.STYLE_TOPDOWN);
+        this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
 
-        this.entities = [];
-        this.entities.push(this.player);
-
+        // Remove
         var bmpText = this.game.add.bitmapText(200, 100, 'bitmap_font', 'SOMETHING', 12);
         bmpText.fixedToCamera = true;
     },
 
     'update': function () {
         'use strict';
-        this.entities.forEach(function (entity) {
-            entity.update();
+        // Collide with the collision layer
+        this.game.physics.arcade.collide(this.player, this.world.collision_layer);
+        this.game.physics.arcade.overlap(this.player, this.interactables, function (player, interactable) {
+            player.inventory.add(interactable);
+            interactable.destroy();
         });
 
-        // Collide with the collision layer
-        this.game.physics.arcade.collide(this.player.sprite, this.world.collision_layer);
-
-        this.player.sprite.body.velocity.x = 0;
-        this.player.sprite.angle = 0;
+        this.player.body.velocity.x = 0;
+        this.player.angle = 0;
 
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-            this.player.sprite.body.velocity.x = -150;
-            this.player.sprite.angle = -10;
+            this.player.body.velocity.x = -150;
+            this.player.angle = -10;
         }
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-            this.player.sprite.body.velocity.x = 150;
-            this.player.sprite.angle = 10;
+            this.player.body.velocity.x = 150;
+            this.player.angle = 10;
         }
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.sprite.body.onFloor()) {
-            this.player.sprite.body.velocity.y = -350;
+        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.body.onFloor()) {
+            this.player.body.velocity.y = -350;
         }
     },
 
     'render': function () {
         'use strict';
-        this.entities.forEach(function (entity) {
-            entity.render();
-        });
     }
 };
