@@ -1,4 +1,3 @@
-var BaseCharacter = require('./BaseCharacter');
 var Journal = require('../quest/Journal');
 var Quest = require('../quest/Quest');
 var Inventory = require('../items/Inventory');
@@ -9,7 +8,7 @@ Player.prototype.constructor = Player;
 
 function Player(game, x, y) {
     'use strict';
-    Phaser.Sprite.call(this, game, x, y, 'test');
+    Phaser.Sprite.call(this, game, x, y, 'base_player');
 
     this.coins = 0;
     this.hp = 100;
@@ -23,7 +22,7 @@ function Player(game, x, y) {
     };
 
     this.arms = new PlayerArms(game, x, y);
-    this.addChild(this.arms);
+    //this.addChild(this.arms);
 
     this.inventory = new Inventory(12);
     this.journal = new Journal();
