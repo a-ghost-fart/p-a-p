@@ -382,7 +382,7 @@ module.exports = {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.init_world();
         this.init_collections(this.game);
-        this.init_character();
+        this.init_player();
     },
 
     'init_player': function () {
