@@ -51,14 +51,15 @@ function Player(game, x, y) {
 Player.prototype.enable_physics = function (game) {
     'use strict';
     game.physics.arcade.enable(this);
-    this.body.bounce.y = 0.2;
-    this.body.gravity.y = 300;
+    this.body.bounce.y = 0;
+    this.body.gravity.y = 450;
     this.anchor.setTo(0.5, 0.5);
+    this.body.collideWorldBounds = true;
 };
 
 module.exports = Player;
 
-},{"../items/Inventory":7,"../quest/Journal":9,"../quest/Quest":10,"./BaseCharacter":1,"./PlayerArms":3}],3:[function(require,module,exports){
+},{"../items/Inventory":7,"../quest/Journal":10,"../quest/Quest":11,"./BaseCharacter":1,"./PlayerArms":3}],3:[function(require,module,exports){
 PlayerArms.prototype = Object.create(Phaser.Sprite.prototype);
 PlayerArms.prototype.constructor = PlayerArms;
 
@@ -105,7 +106,7 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":4,"./states/LoadingState":11,"./states/PlayState":12}],7:[function(require,module,exports){
+},{"./conf/Config.js":4,"./states/LoadingState":12,"./states/PlayState":13}],7:[function(require,module,exports){
 var ItemType = require('../enum/ItemType');
 
 function Inventory(size) {
@@ -234,7 +235,24 @@ Item.prototype.enable_physics = function (game) {
 
 module.exports = Item;
 
-},{"../util/ItemUtil":13}],9:[function(require,module,exports){
+},{"../util/ItemUtil":14}],9:[function(require,module,exports){
+Projectile.prototype = Object.create(Phaser.Sprite.prototype);
+Projectile.prototype.constructor = Projectile;
+
+function Projectile(game, x, y) {
+    'use strict';
+    Phaser.Sprite.call(this, game, x, y, 'test_projectile');
+}
+
+
+Projectile.prototype.fire = function (game, target) {
+    'use strict';
+    
+};
+
+module.exports = Projectile;
+
+},{}],10:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -315,7 +333,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":10}],10:[function(require,module,exports){
+},{"./Quest":11}],11:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -344,7 +362,7 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":14}],11:[function(require,module,exports){
+},{"../util/QuestUtil":15}],12:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
@@ -353,6 +371,7 @@ module.exports = {
         this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
         this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
         this.load.image('test_item', 'assets/sprites/test_item.png');
+        this.load.image('test_projectile', 'assets/sprites/test_projectile.png');
 
         this.load.spritesheet('test_button', 'assets/ui/test_button.png', 64, 32);
 
@@ -366,9 +385,10 @@ module.exports = {
     }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
+var Projectile = require('../projectiles/Projectile');
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -398,6 +418,15 @@ module.exports = {
         this.interactables = this.game.add.group();
         this.interactables.enableBody = true;
         this.interactables.add(item);
+
+        this.projectiles = this.game.add.group();
+        this.projectiles.enableBody = true;
+        this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
+        this.projectiles.createMultiple(20, 'test_projectile', 0, false);
+        this.projectiles.setAll('anchor.x', 0.5);
+        this.projectiles.setAll('anchor.y', 0.5);
+        this.projectiles.setAll('outOfBoundsKill', true);
+        this.projectiles.setAll('checkWorldBounds', true);
 
         this.world.collision_layer = this.world.map.createLayer('collision');
         this.world.map.setCollision(179, true, this.world.collision_layer);
@@ -438,6 +467,13 @@ module.exports = {
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.body.onFloor()) {
             this.player.body.velocity.y = -350;
         }
+
+        if (this.game.input.activePointer === 1) {
+            var bullet = this.projectiles.getFirstDead();
+            bullet.reset(this.player.x, this.player.y);
+            bullet.rotation = this.game.physics.arcade.moveToObject(this, this.game.input.activePointer, 500);
+        };
+
     },
 
     'render': function () {
@@ -445,7 +481,7 @@ module.exports = {
     }
 };
 
-},{"../characters/Player":2,"../items/Item":8}],13:[function(require,module,exports){
+},{"../characters/Player":2,"../items/Item":8,"../projectiles/Projectile":9}],14:[function(require,module,exports){
 module.exports = {
     'generate_item_id': function (seed) {
         'use strict';
@@ -458,7 +494,7 @@ module.exports = {
     }
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
