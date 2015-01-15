@@ -50,7 +50,7 @@ function Player(game) {
 
 module.exports = Player;
 
-},{"../items/Inventory":5,"../quest/Journal":6,"../quest/Quest":7,"./BaseCharacter":1}],3:[function(require,module,exports){
+},{"../items/Inventory":6,"../quest/Journal":7,"../quest/Quest":8,"./BaseCharacter":1}],3:[function(require,module,exports){
 module.exports = {
     'TITLE': 'Something in phaser.',
     'VERSION': '0.0.1',
@@ -59,6 +59,14 @@ module.exports = {
 };
 
 },{}],4:[function(require,module,exports){
+module.exports = {
+    'ARMOUR': 0,
+    'WEAPON': 1,
+    'SPELL': 2,
+    'CONSUMABLE': 3
+};
+
+},{}],5:[function(require,module,exports){
 var Config = require('./conf/Config.js');
 
 // Bootstrap phaser and states
@@ -77,7 +85,9 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":8,"./states/PlayState":9}],5:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":9,"./states/PlayState":10}],6:[function(require,module,exports){
+var ItemType = require('../enum/ItemType');
+
 function Inventory(size) {
     'use strict';
     // Yeah, correct the size for 0 indexing
@@ -123,6 +133,23 @@ Inventory.prototype.add = function (item, slot) {
 };
 
 
+Inventory.prototype.use_item = function (slot) {
+    'use strict';
+    try {
+        var item = this.get_item_in_slot(slot);
+        if (item.type === ItemType.CONSUMABLE) {
+            console.log('it\'s a consumable');
+        } else if (item.type === ItemType.ARMOUR) {
+            console.log('it\'s armour');
+        } else if (item.type === ItemType.WEAPON) {
+            console.log('it\'s a weapon');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+
 Inventory.prototype.find_empty_slot = function () {
     'use strict';
     for (var i = 0; i < this.items.length; i++) {
@@ -134,6 +161,23 @@ Inventory.prototype.find_empty_slot = function () {
 };
 
 
+Inventory.prototype.get_item_in_slot = function (slot) {
+    'use strict';
+    if (!this.items[slot]) {
+        throw new Error('No item found in slot ' + slot);
+    } else {
+        return this.items[slot];
+    }
+};
+
+
+Inventory.prototype.init_ui = function (game) {
+    'use strict';
+    var button = game.add.button(10, 10, 'test_button', this.list, this, 2, 1, 0);
+    button.fixedToCamera = true;
+};
+
+
 Inventory.prototype.list = function () {
     'use strict';
     console.log(this.items);
@@ -142,7 +186,7 @@ Inventory.prototype.list = function () {
 
 module.exports = Inventory;
 
-},{}],6:[function(require,module,exports){
+},{"../enum/ItemType":4}],7:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -223,7 +267,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":7}],7:[function(require,module,exports){
+},{"./Quest":8}],8:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -252,13 +296,17 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":10}],8:[function(require,module,exports){
+},{"../util/QuestUtil":11}],9:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
         this.load.image('test', 'assets/sprites/test_player.png');
         this.load.image('test_bg', 'assets/backgrounds/test_galaxy.jpg');
         this.load.image('test_tiles', 'assets/tilesets/test_tileset.png');
+
+        this.load.spritesheet('test_button', 'assets/ui/test_button.png', 64, 32);
+
+        this.load.bitmapFont('bitmap_font', 'assets/ui/font.png', 'assets/ui/font.xml');
 
         this.load.tilemap('test_map', 'assets/maps/test.json', null, Phaser.Tilemap.TILED_JSON);
     },
@@ -268,9 +316,10 @@ module.exports = {
     }
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var Player = require('../characters/Player');
 
+// TODO: Refactor all this shit
 module.exports = {
     'create': function () {
         'use strict';
@@ -293,13 +342,15 @@ module.exports = {
         this.world.collision_layer.resizeWorld();
 
         this.player = new Player(this.game);
+        this.player.inventory.init_ui(this.game);
 
         this.game.camera.follow(this.player.sprite, Phaser.Camera.STYLE_TOPDOWN);
 
         this.entities = [];
         this.entities.push(this.player);
 
-        this.game.debug.text('fart', 10, 10);
+        var bmpText = this.game.add.bitmapText(200, 100, 'bitmap_font', 'SOMETHING', 12);
+        bmpText.fixedToCamera = true;
     },
 
     'update': function () {
@@ -335,7 +386,7 @@ module.exports = {
     }
 };
 
-},{"../characters/Player":2}],10:[function(require,module,exports){
+},{"../characters/Player":2}],11:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
@@ -348,4 +399,4 @@ module.exports = {
     }
 };
 
-},{}]},{},[4])
+},{}]},{},[5])

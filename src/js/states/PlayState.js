@@ -1,5 +1,6 @@
 var Player = require('../characters/Player');
 
+// TODO: Refactor all this shit
 module.exports = {
     'create': function () {
         'use strict';
@@ -22,13 +23,15 @@ module.exports = {
         this.world.collision_layer.resizeWorld();
 
         this.player = new Player(this.game);
+        this.player.inventory.init_ui(this.game);
 
         this.game.camera.follow(this.player.sprite, Phaser.Camera.STYLE_TOPDOWN);
 
         this.entities = [];
         this.entities.push(this.player);
 
-        this.game.debug.text('fart', 10, 10);
+        var bmpText = this.game.add.bitmapText(200, 100, 'bitmap_font', 'SOMETHING', 12);
+        bmpText.fixedToCamera = true;
     },
 
     'update': function () {

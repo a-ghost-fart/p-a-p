@@ -1,3 +1,5 @@
+var ItemType = require('../enum/ItemType');
+
 function Inventory(size) {
     'use strict';
     // Yeah, correct the size for 0 indexing
@@ -43,6 +45,23 @@ Inventory.prototype.add = function (item, slot) {
 };
 
 
+Inventory.prototype.use_item = function (slot) {
+    'use strict';
+    try {
+        var item = this.get_item_in_slot(slot);
+        if (item.type === ItemType.CONSUMABLE) {
+            console.log('it\'s a consumable');
+        } else if (item.type === ItemType.ARMOUR) {
+            console.log('it\'s armour');
+        } else if (item.type === ItemType.WEAPON) {
+            console.log('it\'s a weapon');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+
 Inventory.prototype.find_empty_slot = function () {
     'use strict';
     for (var i = 0; i < this.items.length; i++) {
@@ -51,6 +70,23 @@ Inventory.prototype.find_empty_slot = function () {
         }
     }
     return null;
+};
+
+
+Inventory.prototype.get_item_in_slot = function (slot) {
+    'use strict';
+    if (!this.items[slot]) {
+        throw new Error('No item found in slot ' + slot);
+    } else {
+        return this.items[slot];
+    }
+};
+
+
+Inventory.prototype.init_ui = function (game) {
+    'use strict';
+    var button = game.add.button(10, 10, 'test_button', this.list, this, 2, 1, 0);
+    button.fixedToCamera = true;
 };
 
 
