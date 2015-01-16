@@ -14,6 +14,10 @@ function Player(game, x, y) {
     this.animations.add('walk');
     this.animations.play('walk', 12, true);
 
+    this.movement_speed = 250;
+    this.jump_speed = 350;
+    this.acceleration = 40;
+
     this.coins = 0;
     this.hp = 100;
     this.mp = 100;
@@ -43,6 +47,24 @@ Player.prototype.enable_physics = function (game) {
     this.anchor.setTo(0.5, 0.5);
     this.body.collideWorldBounds = true;
 };
+
+Player.prototype.handle_update = function (game) {
+    'use strict';
+    this.body.velocity.x = 0;
+    this.angle = 0;
+
+    if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
+        this.body.velocity.x = -this.movement_speed;
+        this.angle = -6;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.D)) {
+        this.body.velocity.x = this.movement_speed;
+        this.angle = 6;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.body.onFloor()) {
+        this.body.velocity.y = -this.jump_speed;
+    }
+}
 
 module.exports = Player;
 
@@ -420,6 +442,7 @@ module.exports = {
     'init_collections': function (game) {
         'use strict';
 
+        // Debug test icon
         var item = new Item(this.game, 300, 300, {
             'name': 'test item',
             'description': 'something something',
@@ -434,7 +457,7 @@ module.exports = {
 
     'update': function () {
         'use strict';
-        // Collide with the collision layer
+        // Handle collisions
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
         this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
         this.game.physics.arcade.overlap(this.player, this.collectables, function (player, interactable) {
@@ -442,21 +465,7 @@ module.exports = {
             interactable.destroy();
         });
 
-        this.player.body.velocity.x = 0;
-        this.player.angle = 0;
-
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-            this.player.body.velocity.x = -250;
-            this.player.angle = -10;
-        }
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-            this.player.body.velocity.x = 250;
-            this.player.angle = 10;
-        }
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.player.body.onFloor()) {
-            this.player.body.velocity.y = -350;
-        }
-
+        this.player.handle_update(this.game);
     },
 
     'render': function () {
