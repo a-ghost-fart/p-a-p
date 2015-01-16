@@ -13,6 +13,10 @@ function Player(game, x, y) {
     this.animations.add('walk');
     this.animations.play('walk', 12, true);
 
+    this.movement_speed = 250;
+    this.jump_speed = 350;
+    this.acceleration = 40;
+
     this.coins = 0;
     this.hp = 100;
     this.mp = 100;
@@ -42,5 +46,23 @@ Player.prototype.enable_physics = function (game) {
     this.anchor.setTo(0.5, 0.5);
     this.body.collideWorldBounds = true;
 };
+
+Player.prototype.handle_update = function (game) {
+    'use strict';
+    this.body.velocity.x = 0;
+    this.angle = 0;
+
+    if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
+        this.body.velocity.x = -this.movement_speed;
+        this.angle = -6;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.D)) {
+        this.body.velocity.x = this.movement_speed;
+        this.angle = 6;
+    }
+    if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this.body.onFloor()) {
+        this.body.velocity.y = -this.jump_speed;
+    }
+}
 
 module.exports = Player;
