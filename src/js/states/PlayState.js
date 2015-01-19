@@ -15,7 +15,6 @@ module.exports = {
     'init_player': function () {
         'use strict';
         this.player = new Player(this.game, 10, 10);
-        this.player.inventory.init_ui(this.game);
         this.game.add.existing(this.player);
         this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
     },
