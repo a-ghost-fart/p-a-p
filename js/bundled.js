@@ -201,13 +201,6 @@ Inventory.prototype.get_item_in_slot = function (slot) {
 };
 
 
-Inventory.prototype.init_ui = function (game) {
-    'use strict';
-    var button = game.add.button(10, 10, 'test_button', this.list, this, 2, 1, 0);
-    button.fixedToCamera = true;
-};
-
-
 Inventory.prototype.list = function () {
     'use strict';
     console.log(this.items);
@@ -414,7 +407,6 @@ module.exports = {
     'init_player': function () {
         'use strict';
         this.player = new Player(this.game, 10, 10);
-        this.player.inventory.init_ui(this.game);
         this.game.add.existing(this.player);
         this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
     },
