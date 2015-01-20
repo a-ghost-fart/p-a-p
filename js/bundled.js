@@ -93,7 +93,7 @@ Player.prototype.handle_update = function (game) {
 
 module.exports = Player;
 
-},{"../items/Inventory":6,"../quest/Journal":9,"../quest/Quest":10,"./PlayerArms":2}],2:[function(require,module,exports){
+},{"../items/Inventory":6,"../quest/Journal":12,"../quest/Quest":13,"./PlayerArms":2}],2:[function(require,module,exports){
 PlayerArms.prototype = Object.create(Phaser.Sprite.prototype);
 PlayerArms.prototype.constructor = PlayerArms;
 
@@ -140,7 +140,7 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":11,"./states/PlayState":12}],6:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":14,"./states/PlayState":15}],6:[function(require,module,exports){
 var ItemType = require('../enum/ItemType');
 
 function Inventory(size) {
@@ -262,7 +262,76 @@ Item.prototype.enable_physics = function (game) {
 
 module.exports = Item;
 
-},{"../util/ItemUtil":13}],8:[function(require,module,exports){
+},{"../util/ItemUtil":16}],8:[function(require,module,exports){
+function Block(position, width, height) {
+    'use strict';
+    this.position = position;
+    this.width = width;
+    this.height = height;
+}
+
+Block.prototype.get_points = function () {
+    'use strict';
+    return [
+        new Phaser.Point(this.position.x, this.position.y - this.height),
+        new Phaser.Point(this.position.x + this.width, this.position.y - this.height),
+        new Phaser.Point(this.position.x + this.width, this.position.y),
+        new Phaser.Point(this.position.x, this.position.y)
+    ];
+};
+
+Block.prototype.draw_outline = function (context) {
+    'use strict';
+    var points = this.get_points();
+    context.strokeStyle = 'red';
+    context.beginPath();
+    context.moveTo(points[0].x, points[0].y);
+    for (var i = 1; i < points.length; i++) {
+        context.lineTo(points[i].x, points[i].y);
+    }
+    context.lineTo(points[0].x, points[0].y);
+    context.stroke();
+};
+
+module.exports = Block;
+
+},{}],9:[function(require,module,exports){
+function Light(position) {
+    'use strict';
+    this.position = position;
+}
+
+Light.prototype.emit = function (context) {
+    'use strict';
+    context.fillStyle = 'blue';
+    context.fillRect(this.position.x, this.position.y, 20, 20);
+};
+
+module.exports = Light;
+
+},{}],10:[function(require,module,exports){
+function Ray(start, target) {
+    'use strict';
+    this.start = start;
+    this.target = target;
+}
+
+Ray.prototype.draw = function (context) {
+    'use strict';
+    var d_y = this.start.y - this.target.y;
+    var d_x = this.start.x - this.target.x;
+    var angle = Math.atan2(d_y, d_x);
+    var dist = 1000;
+    context.strokeStyle = 'green';
+    context.beginPath();
+    context.moveTo(this.start.x, this.start.y);
+    context.lineTo(this.start.x - dist * Math.cos(angle), this.start.y - dist * Math.sin(angle));
+    context.stroke();
+};
+
+module.exports = Ray;
+
+},{}],11:[function(require,module,exports){
 Projectile.prototype = Object.create(Phaser.Sprite.prototype);
 Projectile.prototype.constructor = Projectile;
 
@@ -279,7 +348,7 @@ Projectile.prototype.fire = function (game, target) {
 
 module.exports = Projectile;
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -360,7 +429,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":10}],10:[function(require,module,exports){
+},{"./Quest":13}],13:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -389,7 +458,7 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":14}],11:[function(require,module,exports){
+},{"../util/QuestUtil":17}],14:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
@@ -415,11 +484,15 @@ module.exports = {
     }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /*globals illuminated*/
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
 var Projectile = require('../projectiles/Projectile');
+
+var Block = require('../lighting/Block');
+var Light = require('../lighting/Light');
+var Ray = require('../lighting/Ray');
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -434,23 +507,26 @@ module.exports = {
         this.dust_emitter.makeParticles('dust');
         this.dust_emitter.gravity = 200;
 
-        // Lighting hacks
-        var col = this.world.collision_layer.layer.data;
-        var cols = [];
+        // WIP light stuff
+        this.lights = [];
+        this.lights.push(new Light(new Phaser.Point(100, 100)));
+        this.blocks = [];
 
-        for (var y = 0; y < col.length; y++) {
-            for (var x = 0; x < col[0].length; x++) {
-                if (col[y][x].index === 179) {
-                    cols.push(new illuminated.RectangleObject({
-                        topleft: new illuminated.Vec2(col[y][x].worldX, col[y][x].worldY),
-                        bottomright: new illuminated.Vec2(col[y][x].worldX + 32, col[y][x].worldY + 32)
-                    }));
+        var col_data = this.world.collision_layer.layer.data;
+        for (var y = 0; y < col_data.length; y++) {
+            for (var x = 0; x < col_data[0].length; x++) {
+                if (col_data[y][x].index === 179) {
+                    this.blocks.push(
+                        new Block(
+                            new Phaser.Point(col_data[y][x].worldX, col_data[y][x].worldY + 32),
+                            32,
+                            32
+                        )
+                    );
                 }
             }
         }
-        this.lamp = new illuminated.Lamp({ position: new illuminated.Vec2(100, 100) });
-        this.lighting = new illuminated.Lighting({ light: this.lamp, objects: cols});
-        this.darkmask = new illuminated.DarkMask({ lights: [this.lamp], color: 'rgba(0, 0, 0, 0.9)'});
+        // end WIP
     },
 
     'init_player': function () {
@@ -500,12 +576,6 @@ module.exports = {
         'use strict';
         var _this = this;
 
-        // Lighting hacks
-        this.lamp.position.x = this.player.x;
-        this.lamp.position.y = this.player.y;
-        this.lighting.compute(this.game.canvas.width, this.game.canvas.height);
-        this.darkmask.compute(this.game.canvas.width, this.game.canvas.height);
-
         // Handle collisions
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
         this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
@@ -521,17 +591,34 @@ module.exports = {
             interactable.destroy();
         });
 
+        // WIP light stuff
+        this.lights[0].position.x = this.player.position.x;
+        this.lights[0].position.y = this.player.position.y;
+        // end WIP
+
         this.player.handle_update(this.game);
     },
 
     'render': function () {
         'use strict';
-        this.lighting.render(this.game.context);
-        this.darkmask.render(this.game.context);
+
+        // WIP light stuff
+        var _this = this;
+        this.lights.forEach(function (light) {
+            _this.blocks.forEach(function (block) {
+                block.draw_outline(_this.game.context);
+                var points = block.get_points();
+                points.forEach(function (point) {
+                    var ray = new Ray(light.position, point);
+                    ray.draw(_this.game.context);
+                });
+            });
+        });
+        // end WIP
     }
 };
 
-},{"../characters/Player":1,"../items/Item":7,"../projectiles/Projectile":8}],13:[function(require,module,exports){
+},{"../characters/Player":1,"../items/Item":7,"../lighting/Block":8,"../lighting/Light":9,"../lighting/Ray":10,"../projectiles/Projectile":11}],16:[function(require,module,exports){
 module.exports = {
     'generate_item_id': function (seed) {
         'use strict';
@@ -544,7 +631,7 @@ module.exports = {
     }
 };
 
-},{}],14:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
