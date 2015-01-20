@@ -416,6 +416,7 @@ module.exports = {
 };
 
 },{}],12:[function(require,module,exports){
+/*globals illuminated*/
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
 var Projectile = require('../projectiles/Projectile');
@@ -432,6 +433,13 @@ module.exports = {
         this.dust_emitter = this.game.add.emitter(0, 0, 100);
         this.dust_emitter.makeParticles('dust');
         this.dust_emitter.gravity = 200;
+
+
+        // Lighting hacks
+        this.lamp = new illuminated.Lamp({ position: new illuminated.Vec2(100, 100) });
+        this.poly = new illuminated.RectangleObject(new illuminated.Vec2(140, 140), new illuminated.Vec2(160, 160));
+        this.lighting = new illuminated.Lighting({ light: this.lamp, objects: [this.poly]});
+        this.darkmask = new illuminated.DarkMask({ lights: [this.lamp], color: 'rgba(0, 0, 0, 0.8)'});
     },
 
     'init_player': function () {
@@ -481,6 +489,12 @@ module.exports = {
         'use strict';
         var _this = this;
 
+        // Lighting hacks
+        this.lamp.position.x = this.player.x;
+        this.lamp.position.y = this.player.y;
+        this.lighting.compute(this.game.canvas.width - this.game.camera._targetPosition.x, this.game.canvas.height - this.game.camera._targetPosition.y);
+        this.darkmask.compute(this.game.canvas.width, this.game.canvas.height);
+
         // Handle collisions
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
         this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
@@ -501,6 +515,8 @@ module.exports = {
 
     'render': function () {
         'use strict';
+        this.lighting.render(this.game.context);
+        this.darkmask.render(this.game.context);
     }
 };
 
