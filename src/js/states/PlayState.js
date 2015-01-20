@@ -97,7 +97,9 @@ module.exports = {
 
     'render': function () {
         'use strict';
+        /*
         this.lighting.render(this.game.context);
         this.darkmask.render(this.game.context);
+        */
     }
 };
