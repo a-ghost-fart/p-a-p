@@ -36,6 +36,16 @@ function Player(game, x, y) {
     this.abilities = [];
 
     this.enable_physics(game);
+
+    // Bullet mock
+    this.projectiles = game.add.group();
+    this.projectiles.enableBody = true;
+    this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
+    this.projectiles.createMultiple(50, 'test_projectile');
+    this.projectiles.setAll('checkWorldBounds', true);
+    this.projectiles.setAll('outOfBoundsKill', true);
+    this.fire_cooldown = 0;
+    this.fire_rate = 100;
 }
 
 Player.prototype.enable_physics = function (game) {
@@ -47,10 +57,25 @@ Player.prototype.enable_physics = function (game) {
     this.body.collideWorldBounds = true;
 };
 
+Player.prototype.fire = function (game, target) {
+    'use strict';
+    if (game.time.now > this.fire_cooldown && this.projectiles.countDead() > 0) {
+        this.fire_cooldown = game.time.now + this.fire_rate;
+        var projectile = this.projectiles.getFirstDead();
+        projectile.reset(this.x, this.y);
+        projectile.rotation = game.physics.arcade.angleToPointer(projectile);
+        game.physics.arcade.moveToPointer(projectile, 300);
+    }
+};
+
 Player.prototype.handle_update = function (game) {
     'use strict';
     this.body.velocity.x = 0;
     this.angle = 0;
+
+    if (game.input.activePointer.isDown) {
+        this.fire(game, game.input.mousePointer.position);
+    }
 
     if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
         this.body.velocity.x = -this.movement_speed;

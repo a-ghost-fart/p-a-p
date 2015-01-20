@@ -10,6 +10,10 @@ module.exports = {
         this.init_world();
         this.init_collections(this.game);
         this.init_player();
+
+        this.dust_emitter = this.game.add.emitter(0, 0, 100);
+        this.dust_emitter.makeParticles('dust');
+        this.dust_emitter.gravity = 200;
     },
 
     'init_player': function () {
@@ -57,9 +61,18 @@ module.exports = {
 
     'update': function () {
         'use strict';
+        var _this = this;
+
         // Handle collisions
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
         this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
+        this.game.physics.arcade.collide(this.dust_emitter, this.world.collision_layer);
+        this.game.physics.arcade.collide(this.player.projectiles, this.world.collision_layer, function (projectile) {
+            _this.dust_emitter.x = projectile.x;
+            _this.dust_emitter.y = projectile.y;
+            _this.dust_emitter.start(true, 2000, null, 10);
+            projectile.kill();
+        });
         this.game.physics.arcade.overlap(this.player, this.collectables, function (player, interactable) {
             player.inventory.add(interactable);
             interactable.destroy();

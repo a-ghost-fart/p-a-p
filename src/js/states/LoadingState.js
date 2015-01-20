@@ -14,6 +14,7 @@ module.exports = {
         this.load.image('base_player', 'assets/sprites/base_player.png');
         this.load.spritesheet('idle_anim', 'assets/sprites/idle_animation.png', 14, 48, 12);
         this.load.bitmapFont('bitmap_font', 'assets/ui/font.png', 'assets/ui/font.xml');
+        this.load.image('dust', 'assets/sprites/dust.png');
 
     },
     'create': function () {

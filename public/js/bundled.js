@@ -37,6 +37,16 @@ function Player(game, x, y) {
     this.abilities = [];
 
     this.enable_physics(game);
+
+    // Bullet mock
+    this.projectiles = game.add.group();
+    this.projectiles.enableBody = true;
+    this.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
+    this.projectiles.createMultiple(50, 'test_projectile');
+    this.projectiles.setAll('checkWorldBounds', true);
+    this.projectiles.setAll('outOfBoundsKill', true);
+    this.fire_cooldown = 0;
+    this.fire_rate = 100;
 }
 
 Player.prototype.enable_physics = function (game) {
@@ -48,10 +58,25 @@ Player.prototype.enable_physics = function (game) {
     this.body.collideWorldBounds = true;
 };
 
+Player.prototype.fire = function (game, target) {
+    'use strict';
+    if (game.time.now > this.fire_cooldown && this.projectiles.countDead() > 0) {
+        this.fire_cooldown = game.time.now + this.fire_rate;
+        var projectile = this.projectiles.getFirstDead();
+        projectile.reset(this.x, this.y);
+        projectile.rotation = game.physics.arcade.angleToPointer(projectile);
+        game.physics.arcade.moveToPointer(projectile, 300);
+    }
+};
+
 Player.prototype.handle_update = function (game) {
     'use strict';
     this.body.velocity.x = 0;
     this.angle = 0;
+
+    if (game.input.activePointer.isDown) {
+        this.fire(game, game.input.mousePointer.position);
+    }
 
     if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
         this.body.velocity.x = -this.movement_speed;
@@ -381,6 +406,7 @@ module.exports = {
         this.load.image('base_player', 'assets/sprites/base_player.png');
         this.load.spritesheet('idle_anim', 'assets/sprites/idle_animation.png', 14, 48, 12);
         this.load.bitmapFont('bitmap_font', 'assets/ui/font.png', 'assets/ui/font.xml');
+        this.load.image('dust', 'assets/sprites/dust.png');
 
     },
     'create': function () {
@@ -402,6 +428,10 @@ module.exports = {
         this.init_world();
         this.init_collections(this.game);
         this.init_player();
+
+        this.dust_emitter = this.game.add.emitter(0, 0, 100);
+        this.dust_emitter.makeParticles('dust');
+        this.dust_emitter.gravity = 200;
     },
 
     'init_player': function () {
@@ -449,9 +479,18 @@ module.exports = {
 
     'update': function () {
         'use strict';
+        var _this = this;
+
         // Handle collisions
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
         this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
+        this.game.physics.arcade.collide(this.dust_emitter, this.world.collision_layer);
+        this.game.physics.arcade.collide(this.player.projectiles, this.world.collision_layer, function (projectile) {
+            _this.dust_emitter.x = projectile.x;
+            _this.dust_emitter.y = projectile.y;
+            _this.dust_emitter.start(true, 2000, null, 10);
+            projectile.kill();
+        });
         this.game.physics.arcade.overlap(this.player, this.collectables, function (player, interactable) {
             player.inventory.add(interactable);
             interactable.destroy();
