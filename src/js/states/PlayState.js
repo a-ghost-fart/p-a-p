@@ -3,6 +3,10 @@ var Player = require('../characters/Player');
 var Item = require('../items/Item');
 var Projectile = require('../projectiles/Projectile');
 
+var Block = require('../lighting/Block');
+var Light = require('../lighting/Light');
+var Ray = require('../lighting/Ray');
+
 // TODO: Refactor all this shit
 module.exports = {
     'create': function () {
@@ -16,23 +20,26 @@ module.exports = {
         this.dust_emitter.makeParticles('dust');
         this.dust_emitter.gravity = 200;
 
-        // Lighting hacks
-        var col = this.world.collision_layer.layer.data;
-        var cols = [];
+        // WIP light stuff
+        this.lights = [];
+        this.lights.push(new Light(new Phaser.Point(100, 100)));
+        this.blocks = [];
 
-        for (var y = 0; y < col.length; y++) {
-            for (var x = 0; x < col[0].length; x++) {
-                if (col[y][x].index === 179) {
-                    cols.push(new illuminated.RectangleObject({
-                        topleft: new illuminated.Vec2(col[y][x].worldX, col[y][x].worldY),
-                        bottomright: new illuminated.Vec2(col[y][x].worldX + 32, col[y][x].worldY + 32)
-                    }));
+        var col_data = this.world.collision_layer.layer.data;
+        for (var y = 0; y < col_data.length; y++) {
+            for (var x = 0; x < col_data[0].length; x++) {
+                if (col_data[y][x].index === 179) {
+                    this.blocks.push(
+                        new Block(
+                            new Phaser.Point(col_data[y][x].worldX, col_data[y][x].worldY + 32),
+                            32,
+                            32
+                        )
+                    );
                 }
             }
         }
-        this.lamp = new illuminated.Lamp({ position: new illuminated.Vec2(100, 100) });
-        this.lighting = new illuminated.Lighting({ light: this.lamp, objects: cols});
-        this.darkmask = new illuminated.DarkMask({ lights: [this.lamp], color: 'rgba(0, 0, 0, 0.9)'});
+        // end WIP
     },
 
     'init_player': function () {
@@ -82,12 +89,6 @@ module.exports = {
         'use strict';
         var _this = this;
 
-        // Lighting hacks
-        this.lamp.position.x = this.player.x;
-        this.lamp.position.y = this.player.y;
-        this.lighting.compute(this.game.canvas.width, this.game.canvas.height);
-        this.darkmask.compute(this.game.canvas.width, this.game.canvas.height);
-
         // Handle collisions
         this.game.physics.arcade.collide(this.player, this.world.collision_layer);
         this.game.physics.arcade.collide(this.collectables, this.world.collision_layer);
@@ -103,12 +104,29 @@ module.exports = {
             interactable.destroy();
         });
 
+        // WIP light stuff
+        this.lights[0].position.x = this.player.position.x;
+        this.lights[0].position.y = this.player.position.y;
+        // end WIP
+
         this.player.handle_update(this.game);
     },
 
     'render': function () {
         'use strict';
-        this.lighting.render(this.game.context);
-        this.darkmask.render(this.game.context);
+
+        // WIP light stuff
+        var _this = this;
+        this.lights.forEach(function (light) {
+            _this.blocks.forEach(function (block) {
+                block.draw_outline(_this.game.context);
+                var points = block.get_points();
+                points.forEach(function (point) {
+                    var ray = new Ray(light.position, point);
+                    ray.draw(_this.game.context);
+                });
+            });
+        });
+        // end WIP
     }
 };
