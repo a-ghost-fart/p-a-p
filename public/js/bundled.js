@@ -434,12 +434,19 @@ module.exports = {
         this.dust_emitter.makeParticles('dust');
         this.dust_emitter.gravity = 200;
 
+        var col = this.world.collision_layer.layer.data;
+        var cols = [];
+
+        for (var y = 0; y < col.length; y++) {
+            for (var x = 0; x < col[0].length; x++) {
+                cols.push(new illuminated.RectangleObject(new illuminated.Vec2(col[y][x].x, col[y][x].y), new illuminated.Vec2(col[y][x].width, col[y][x].height)));
+            }
+        }
 
         // Lighting hacks
         this.lamp = new illuminated.Lamp({ position: new illuminated.Vec2(100, 100) });
-        this.poly = new illuminated.RectangleObject(new illuminated.Vec2(140, 140), new illuminated.Vec2(160, 160));
-        this.lighting = new illuminated.Lighting({ light: this.lamp, objects: [this.poly]});
-        this.darkmask = new illuminated.DarkMask({ lights: [this.lamp], color: 'rgba(0, 0, 0, 0.8)'});
+        this.lighting = new illuminated.Lighting({ light: this.lamp, objects: cols});
+        this.darkmask = new illuminated.DarkMask({ lights: [this.lamp], color: 'rgba(0, 0, 0, 0.9)'});
     },
 
     'init_player': function () {
@@ -492,7 +499,7 @@ module.exports = {
         // Lighting hacks
         this.lamp.position.x = this.player.x;
         this.lamp.position.y = this.player.y;
-        this.lighting.compute(this.game.canvas.width - this.game.camera._targetPosition.x, this.game.canvas.height - this.game.camera._targetPosition.y);
+        this.lighting.compute(this.game.canvas.width + this.world.x, this.game.canvas.height + this.world.y);
         this.darkmask.compute(this.game.canvas.width, this.game.canvas.height);
 
         // Handle collisions
@@ -515,10 +522,8 @@ module.exports = {
 
     'render': function () {
         'use strict';
-        /*
         this.lighting.render(this.game.context);
         this.darkmask.render(this.game.context);
-        */
     }
 };
 
