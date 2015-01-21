@@ -508,25 +508,59 @@ module.exports = {
         this.dust_emitter.gravity = 200;
 
         // WIP light stuff
+        this.collision_tile = 179;
         this.lights = [];
         this.lights.push(new Light(new Phaser.Point(100, 100)));
-        this.blocks = [];
+        this.blocks = this.consolidate_blocks();
+        // end WIP
+    },
+
+    'consolidate_blocks': function () {
+        'use strict';
+        var blocks = [];
+        var block_indices = [];
 
         var col_data = this.world.collision_layer.layer.data;
+        var _this = this;
+
         for (var y = 0; y < col_data.length; y++) {
             for (var x = 0; x < col_data[0].length; x++) {
-                if (col_data[y][x].index === 179) {
-                    this.blocks.push(
-                        new Block(
-                            new Phaser.Point(col_data[y][x].worldX, col_data[y][x].worldY + 32),
-                            32,
-                            32
-                        )
-                    );
+                if (col_data[y][x].index === this.collision_tile) {
+                    var start = x;
+                    var end = find_block_end(col_data[y], x);
+                    block_indices.push({
+                        'start': start,
+                        'end': end,
+                        'y': y
+                    });
+                    x = end;
                 }
             }
         }
-        // end WIP
+
+        block_indices.forEach(function (obj) {
+            blocks.push(
+                new Block(
+                    new Phaser.Point(col_data[obj.y][obj.start].worldX, col_data[obj.y][obj.start].worldY + 32),
+                    (obj.end - obj.start + 1) * 32,
+                    32
+                )
+            );
+        });
+
+        function find_block_end(arr, current) {
+            for (var i = current; i <= arr.length; i++) {
+                if (i + 1 < arr.length) {
+                    if (arr[i + 1].index !== _this.collision_tile) {
+                        return i;
+                    }
+                } else {
+                    return i;
+                }
+            }
+        }
+
+        return blocks;
     },
 
     'init_player': function () {
