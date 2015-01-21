@@ -1,20 +1,35 @@
+var GeometryUtil = require('../util/GeometryUtil');
+
 function Ray(start, target) {
     'use strict';
     this.start = start;
-    this.target = target;
+    this.distance = 1000;
+    this.angle = Math.atan2(this.start.y - target.y, this.start.x - target.x);
+    this.end = new Phaser.Point(
+        this.start.x - this.distance * Math.cos(this.angle),
+        this.start.y - this.distance * Math.sin(this.angle)
+    );
 }
 
 Ray.prototype.draw = function (context) {
     'use strict';
-    var d_y = this.start.y - this.target.y;
-    var d_x = this.start.x - this.target.x;
-    var angle = Math.atan2(d_y, d_x);
-    var dist = 1000;
     context.strokeStyle = 'green';
     context.beginPath();
     context.moveTo(this.start.x, this.start.y);
-    context.lineTo(this.start.x - dist * Math.cos(angle), this.start.y - dist * Math.sin(angle));
+    context.lineTo(this.end.x, this.end.y);
     context.stroke();
+};
+
+Ray.prototype.check_collision = function (blocks) {
+    'use strict';
+    var _this = this;
+
+    blocks.forEach(function (block) {
+        var edges = block.get_edges();
+        for (var i = 0; i < edges.length; i++) {
+            var intersect = GeometryUtil.get_intersect([_this.start, _this.end], edges[i]);
+        }
+    });
 };
 
 module.exports = Ray;

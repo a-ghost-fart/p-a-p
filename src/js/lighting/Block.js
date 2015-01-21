@@ -28,4 +28,15 @@ Block.prototype.draw_outline = function (context) {
     context.stroke();
 };
 
+Block.prototype.get_edges = function () {
+    'use strict';
+    var points = this.get_points();
+    return [
+        [ points[0], points[1] ],
+        [ points[1], points[2] ],
+        [ points[2], points[3] ],
+        [ points[3], points[0] ]
+    ];
+};
+
 module.exports = Block;

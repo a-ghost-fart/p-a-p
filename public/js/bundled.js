@@ -262,7 +262,7 @@ Item.prototype.enable_physics = function (game) {
 
 module.exports = Item;
 
-},{"../util/ItemUtil":16}],8:[function(require,module,exports){
+},{"../util/ItemUtil":17}],8:[function(require,module,exports){
 function Block(position, width, height) {
     'use strict';
     this.position = position;
@@ -293,6 +293,17 @@ Block.prototype.draw_outline = function (context) {
     context.stroke();
 };
 
+Block.prototype.get_edges = function () {
+    'use strict';
+    var points = this.get_points();
+    return [
+        [ points[0], points[1] ],
+        [ points[1], points[2] ],
+        [ points[2], points[3] ],
+        [ points[3], points[0] ]
+    ];
+};
+
 module.exports = Block;
 
 },{}],9:[function(require,module,exports){
@@ -310,28 +321,43 @@ Light.prototype.emit = function (context) {
 module.exports = Light;
 
 },{}],10:[function(require,module,exports){
+var GeometryUtil = require('../util/GeometryUtil');
+
 function Ray(start, target) {
     'use strict';
     this.start = start;
-    this.target = target;
+    this.distance = 1000;
+    this.angle = Math.atan2(this.start.y - target.y, this.start.x - target.x);
+    this.end = new Phaser.Point(
+        this.start.x - this.distance * Math.cos(this.angle),
+        this.start.y - this.distance * Math.sin(this.angle)
+    );
 }
 
 Ray.prototype.draw = function (context) {
     'use strict';
-    var d_y = this.start.y - this.target.y;
-    var d_x = this.start.x - this.target.x;
-    var angle = Math.atan2(d_y, d_x);
-    var dist = 1000;
     context.strokeStyle = 'green';
     context.beginPath();
     context.moveTo(this.start.x, this.start.y);
-    context.lineTo(this.start.x - dist * Math.cos(angle), this.start.y - dist * Math.sin(angle));
+    context.lineTo(this.end.x, this.end.y);
     context.stroke();
+};
+
+Ray.prototype.check_collision = function (blocks) {
+    'use strict';
+    var _this = this;
+
+    blocks.forEach(function (block) {
+        var edges = block.get_edges();
+        for (var i = 0; i < edges.length; i++) {
+            var intersect = GeometryUtil.get_intersect([_this.start, _this.end], edges[i]);
+        }
+    });
 };
 
 module.exports = Ray;
 
-},{}],11:[function(require,module,exports){
+},{"../util/GeometryUtil":16}],11:[function(require,module,exports){
 Projectile.prototype = Object.create(Phaser.Sprite.prototype);
 Projectile.prototype.constructor = Projectile;
 
@@ -458,7 +484,7 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":17}],14:[function(require,module,exports){
+},{"../util/QuestUtil":18}],14:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
@@ -638,21 +664,36 @@ module.exports = {
 
         // WIP light stuff
         var _this = this;
+        var rays = [];
+
         this.lights.forEach(function (light) {
             _this.blocks.forEach(function (block) {
                 block.draw_outline(_this.game.context);
                 var points = block.get_points();
                 points.forEach(function (point) {
-                    var ray = new Ray(light.position, point);
-                    ray.draw(_this.game.context);
+                    rays.push(new Ray(light.position, point));
                 });
             });
+        });
+
+        rays.forEach(function (ray) {
+            ray.check_collision(_this.blocks);
+            ray.draw(_this.game.context);
         });
         // end WIP
     }
 };
 
 },{"../characters/Player":1,"../items/Item":7,"../lighting/Block":8,"../lighting/Light":9,"../lighting/Ray":10,"../projectiles/Projectile":11}],16:[function(require,module,exports){
+module.exports = {
+    // 4 points, lol!
+    'get_intersect': function (line1, line2) {
+        'use strict';
+
+    }
+};
+
+},{}],17:[function(require,module,exports){
 module.exports = {
     'generate_item_id': function (seed) {
         'use strict';
@@ -665,7 +706,7 @@ module.exports = {
     }
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';

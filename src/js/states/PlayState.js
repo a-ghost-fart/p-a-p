@@ -151,15 +151,21 @@ module.exports = {
 
         // WIP light stuff
         var _this = this;
+        var rays = [];
+
         this.lights.forEach(function (light) {
             _this.blocks.forEach(function (block) {
                 block.draw_outline(_this.game.context);
                 var points = block.get_points();
                 points.forEach(function (point) {
-                    var ray = new Ray(light.position, point);
-                    ray.draw(_this.game.context);
+                    rays.push(new Ray(light.position, point));
                 });
             });
+        });
+
+        rays.forEach(function (ray) {
+            ray.check_collision(_this.blocks);
+            ray.draw(_this.game.context);
         });
         // end WIP
     }
