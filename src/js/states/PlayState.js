@@ -3,9 +3,12 @@ var Player = require('../characters/Player');
 var Item = require('../items/Item');
 var Projectile = require('../projectiles/Projectile');
 
-var Block = require('../lighting/Block');
-var Light = require('../lighting/Light');
-var Ray = require('../lighting/Ray');
+// Illuminated.js mapping
+var Lamp = illuminated.Lamp;
+var Rect = illuminated.RectangleObject;
+var Lighting = illuminated.Lighting;
+var DarkMask = illuminated.DarkMask;
+var Vec2 = illuminated.Vec2;
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -15,17 +18,29 @@ module.exports = {
         this.init_world();
         this.init_collections(this.game);
         this.init_player();
+        this.collision_tile = 179;
 
         this.dust_emitter = this.game.add.emitter(0, 0, 100);
         this.dust_emitter.makeParticles('dust');
         this.dust_emitter.gravity = 200;
 
-        // WIP light stuff
-        this.collision_tile = 179;
-        this.lights = [];
-        this.lights.push(new Light(new Phaser.Point(100, 100)));
+        // Lighting WIP
         this.blocks = this.consolidate_blocks();
-        // end WIP
+        this.light = new Lamp({
+            'position': new Vec2(100, 100),
+            'diffuse': 0.4,
+            'distance': 250,
+            'color': 'rgba(255, 200, 200, 0.1)'
+        });
+        this.lighting = new Lighting({
+            'light': this.light,
+            'objects': this.blocks
+        });
+        this.darkmask = new DarkMask({
+            'lights': [this.light],
+            'color': 'rgba(0, 0, 0, 1)'
+        });
+        // end Lighting WIP
     },
 
     'consolidate_blocks': function () {
@@ -52,13 +67,11 @@ module.exports = {
         }
 
         block_indices.forEach(function (obj) {
-            blocks.push(
-                new Block(
-                    new Phaser.Point(col_data[obj.y][obj.start].worldX, col_data[obj.y][obj.start].worldY + 32),
-                    (obj.end - obj.start + 1) * 32,
-                    32
-                )
-            );
+            var topleft = new Vec2(col_data[obj.y][obj.start].worldX, col_data[obj.y][obj.start].worldY);
+            var bottomright = new Vec2(col_data[obj.y][obj.end].worldX + 32, col_data[obj.y][obj.end].worldY + 32);
+            var block = new Rect({ 'topleft': topleft, 'bottomright': bottomright });
+            block.default_points = block.points;
+            blocks.push(block);
         });
 
         function find_block_end(arr, current) {
@@ -80,7 +93,7 @@ module.exports = {
         'use strict';
         this.player = new Player(this.game, 10, 10);
         this.game.add.existing(this.player);
-        this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
+        this.game.camera.follow(this.player, Phaser.Camera.STYLE_LOCKON);
     },
 
     'init_world': function () {
@@ -138,35 +151,36 @@ module.exports = {
             interactable.destroy();
         });
 
-        // WIP light stuff
-        this.lights[0].position.x = this.player.position.x;
-        this.lights[0].position.y = this.player.position.y;
-        // end WIP
+        // Lighting WIP
+        this.light.position.x = this.player.position.x - this.game.camera.view.x;
+        this.light.position.y = this.player.position.y - this.game.camera.view.y;
+
+        // This has been doing my head in. Basically in illuminatedjs
+        // you need to change the actual vertices of the opaque blocks
+        // manually (of course rebuilding the entire points so js doesn't
+        // go crazy modifying values it shouldn't) and then shift them
+        // around based on phaser's camera offset. Nice.
+        this.blocks.forEach(function (block) {
+            var points = [];
+            for (var i = 0; i < block.points.length; i++) {
+                var new_point = new Vec2(block.default_points[i].x - _this.game.camera.view.x, block.default_points[i].y - _this.game.camera.view.y);
+                points.push(new_point);
+            }
+            block.points = points;
+        });
+
+        this.darkmask.compute(this.game.canvas.width, this.game.canvas.height);
+        this.lighting.compute(this.game.canvas.width, this.game.canvas.height);
+        // end Lighting WIP
 
         this.player.handle_update(this.game);
     },
 
     'render': function () {
         'use strict';
-
-        // WIP light stuff
-        var _this = this;
-        var rays = [];
-
-        this.lights.forEach(function (light) {
-            _this.blocks.forEach(function (block) {
-                block.draw_outline(_this.game.context);
-                var points = block.get_points();
-                points.forEach(function (point) {
-                    rays.push(new Ray(light.position, point));
-                });
-            });
-        });
-
-        rays.forEach(function (ray) {
-            ray.check_collision(_this.blocks);
-            ray.draw(_this.game.context);
-        });
-        // end WIP
+        // Lighting WIP
+        this.lighting.cast(this.game.context);
+        this.darkmask.render(this.game.context);
+        // end Lighting WIP
     }
 };
