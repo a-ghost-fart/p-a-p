@@ -93,7 +93,7 @@ Player.prototype.handle_update = function (game) {
 
 module.exports = Player;
 
-},{"../items/Inventory":6,"../quest/Journal":12,"../quest/Quest":13,"./PlayerArms":2}],2:[function(require,module,exports){
+},{"../items/Inventory":6,"../quest/Journal":9,"../quest/Quest":10,"./PlayerArms":2}],2:[function(require,module,exports){
 PlayerArms.prototype = Object.create(Phaser.Sprite.prototype);
 PlayerArms.prototype.constructor = PlayerArms;
 
@@ -140,7 +140,7 @@ window.onload = function () {
 };
 
 
-},{"./conf/Config.js":3,"./states/LoadingState":14,"./states/PlayState":15}],6:[function(require,module,exports){
+},{"./conf/Config.js":3,"./states/LoadingState":11,"./states/PlayState":12}],6:[function(require,module,exports){
 var ItemType = require('../enum/ItemType');
 
 function Inventory(size) {
@@ -262,102 +262,7 @@ Item.prototype.enable_physics = function (game) {
 
 module.exports = Item;
 
-},{"../util/ItemUtil":17}],8:[function(require,module,exports){
-function Block(position, width, height) {
-    'use strict';
-    this.position = position;
-    this.width = width;
-    this.height = height;
-}
-
-Block.prototype.get_points = function () {
-    'use strict';
-    return [
-        new Phaser.Point(this.position.x, this.position.y - this.height),
-        new Phaser.Point(this.position.x + this.width, this.position.y - this.height),
-        new Phaser.Point(this.position.x + this.width, this.position.y),
-        new Phaser.Point(this.position.x, this.position.y)
-    ];
-};
-
-Block.prototype.draw_outline = function (context) {
-    'use strict';
-    var points = this.get_points();
-    context.strokeStyle = 'red';
-    context.beginPath();
-    context.moveTo(points[0].x, points[0].y);
-    for (var i = 1; i < points.length; i++) {
-        context.lineTo(points[i].x, points[i].y);
-    }
-    context.lineTo(points[0].x, points[0].y);
-    context.stroke();
-};
-
-Block.prototype.get_edges = function () {
-    'use strict';
-    var points = this.get_points();
-    return [
-        [ points[0], points[1] ],
-        [ points[1], points[2] ],
-        [ points[2], points[3] ],
-        [ points[3], points[0] ]
-    ];
-};
-
-module.exports = Block;
-
-},{}],9:[function(require,module,exports){
-function Light(position) {
-    'use strict';
-    this.position = position;
-}
-
-Light.prototype.emit = function (context) {
-    'use strict';
-    context.fillStyle = 'blue';
-    context.fillRect(this.position.x, this.position.y, 20, 20);
-};
-
-module.exports = Light;
-
-},{}],10:[function(require,module,exports){
-var GeometryUtil = require('../util/GeometryUtil');
-
-function Ray(start, target) {
-    'use strict';
-    this.start = start;
-    this.distance = 1000;
-    this.angle = Math.atan2(this.start.y - target.y, this.start.x - target.x);
-    this.end = new Phaser.Point(
-        this.start.x - this.distance * Math.cos(this.angle),
-        this.start.y - this.distance * Math.sin(this.angle)
-    );
-}
-
-Ray.prototype.draw = function (context) {
-    'use strict';
-    context.strokeStyle = 'green';
-    context.beginPath();
-    context.moveTo(this.start.x, this.start.y);
-    context.lineTo(this.end.x, this.end.y);
-    context.stroke();
-};
-
-Ray.prototype.check_collision = function (blocks) {
-    'use strict';
-    var _this = this;
-
-    blocks.forEach(function (block) {
-        var edges = block.get_edges();
-        for (var i = 0; i < edges.length; i++) {
-            var intersect = GeometryUtil.get_intersect([_this.start, _this.end], edges[i]);
-        }
-    });
-};
-
-module.exports = Ray;
-
-},{"../util/GeometryUtil":16}],11:[function(require,module,exports){
+},{"../util/ItemUtil":13}],8:[function(require,module,exports){
 Projectile.prototype = Object.create(Phaser.Sprite.prototype);
 Projectile.prototype.constructor = Projectile;
 
@@ -374,7 +279,7 @@ Projectile.prototype.fire = function (game, target) {
 
 module.exports = Projectile;
 
-},{}],12:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Quest = require('./Quest');
 
 function Journal() {
@@ -455,7 +360,7 @@ Journal.prototype.fail_quest = function (id) {
 
 module.exports = Journal;
 
-},{"./Quest":13}],13:[function(require,module,exports){
+},{"./Quest":10}],10:[function(require,module,exports){
 var QuestUtil = require('../util/QuestUtil');
 
 function Quest(name, description, xp_reward, item_reward, journal_entry) {
@@ -484,7 +389,7 @@ Quest.prototype.fail = function () {
 
 module.exports = Quest;
 
-},{"../util/QuestUtil":18}],14:[function(require,module,exports){
+},{"../util/QuestUtil":14}],11:[function(require,module,exports){
 module.exports = {
     'preload': function () {
         'use strict';
@@ -510,15 +415,18 @@ module.exports = {
     }
 };
 
-},{}],15:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /*globals illuminated*/
 var Player = require('../characters/Player');
 var Item = require('../items/Item');
 var Projectile = require('../projectiles/Projectile');
 
-var Block = require('../lighting/Block');
-var Light = require('../lighting/Light');
-var Ray = require('../lighting/Ray');
+// Illuminated.js mapping
+var Lamp = illuminated.Lamp;
+var Rect = illuminated.RectangleObject;
+var Lighting = illuminated.Lighting;
+var DarkMask = illuminated.DarkMask;
+var Vec2 = illuminated.Vec2;
 
 // TODO: Refactor all this shit
 module.exports = {
@@ -528,17 +436,29 @@ module.exports = {
         this.init_world();
         this.init_collections(this.game);
         this.init_player();
+        this.collision_tile = 179;
 
         this.dust_emitter = this.game.add.emitter(0, 0, 100);
         this.dust_emitter.makeParticles('dust');
         this.dust_emitter.gravity = 200;
 
-        // WIP light stuff
-        this.collision_tile = 179;
-        this.lights = [];
-        this.lights.push(new Light(new Phaser.Point(100, 100)));
+        // Lighting WIP
         this.blocks = this.consolidate_blocks();
-        // end WIP
+        this.light = new Lamp({
+            'position': new Vec2(100, 100),
+            'diffuse': 0.4,
+            'distance': 250,
+            'color': 'rgba(255, 200, 200, 0.1)'
+        });
+        this.lighting = new Lighting({
+            'light': this.light,
+            'objects': this.blocks
+        });
+        this.darkmask = new DarkMask({
+            'lights': [this.light],
+            'color': 'rgba(0, 0, 0, 1)'
+        });
+        // end Lighting WIP
     },
 
     'consolidate_blocks': function () {
@@ -565,13 +485,11 @@ module.exports = {
         }
 
         block_indices.forEach(function (obj) {
-            blocks.push(
-                new Block(
-                    new Phaser.Point(col_data[obj.y][obj.start].worldX, col_data[obj.y][obj.start].worldY + 32),
-                    (obj.end - obj.start + 1) * 32,
-                    32
-                )
-            );
+            var topleft = new Vec2(col_data[obj.y][obj.start].worldX, col_data[obj.y][obj.start].worldY);
+            var bottomright = new Vec2(col_data[obj.y][obj.end].worldX + 32, col_data[obj.y][obj.end].worldY + 32);
+            var block = new Rect({ 'topleft': topleft, 'bottomright': bottomright });
+            block.default_points = block.points;
+            blocks.push(block);
         });
 
         function find_block_end(arr, current) {
@@ -593,7 +511,7 @@ module.exports = {
         'use strict';
         this.player = new Player(this.game, 10, 10);
         this.game.add.existing(this.player);
-        this.game.camera.follow(this.player, Phaser.Camera.STYLE_TOPDOWN);
+        this.game.camera.follow(this.player, Phaser.Camera.STYLE_LOCKON);
     },
 
     'init_world': function () {
@@ -651,49 +569,41 @@ module.exports = {
             interactable.destroy();
         });
 
-        // WIP light stuff
-        this.lights[0].position.x = this.player.position.x;
-        this.lights[0].position.y = this.player.position.y;
-        // end WIP
+        // Lighting WIP
+        this.light.position.x = this.player.position.x - this.game.camera.view.x;
+        this.light.position.y = this.player.position.y - this.game.camera.view.y;
+
+        // This has been doing my head in. Basically in illuminatedjs
+        // you need to change the actual vertices of the opaque blocks
+        // manually (of course rebuilding the entire points so js doesn't
+        // go crazy modifying values it shouldn't) and then shift them
+        // around based on phaser's camera offset. Nice.
+        this.blocks.forEach(function (block) {
+            var points = [];
+            for (var i = 0; i < block.points.length; i++) {
+                var new_point = new Vec2(block.default_points[i].x - _this.game.camera.view.x, block.default_points[i].y - _this.game.camera.view.y);
+                points.push(new_point);
+            }
+            block.points = points;
+        });
+
+        this.darkmask.compute(this.game.canvas.width, this.game.canvas.height);
+        this.lighting.compute(this.game.canvas.width, this.game.canvas.height);
+        // end Lighting WIP
 
         this.player.handle_update(this.game);
     },
 
     'render': function () {
         'use strict';
-
-        // WIP light stuff
-        var _this = this;
-        var rays = [];
-
-        this.lights.forEach(function (light) {
-            _this.blocks.forEach(function (block) {
-                block.draw_outline(_this.game.context);
-                var points = block.get_points();
-                points.forEach(function (point) {
-                    rays.push(new Ray(light.position, point));
-                });
-            });
-        });
-
-        rays.forEach(function (ray) {
-            ray.check_collision(_this.blocks);
-            ray.draw(_this.game.context);
-        });
-        // end WIP
+        // Lighting WIP
+        this.lighting.cast(this.game.context);
+        this.darkmask.render(this.game.context);
+        // end Lighting WIP
     }
 };
 
-},{"../characters/Player":1,"../items/Item":7,"../lighting/Block":8,"../lighting/Light":9,"../lighting/Ray":10,"../projectiles/Projectile":11}],16:[function(require,module,exports){
-module.exports = {
-    // 4 points, lol!
-    'get_intersect': function (line1, line2) {
-        'use strict';
-
-    }
-};
-
-},{}],17:[function(require,module,exports){
+},{"../characters/Player":1,"../items/Item":7,"../projectiles/Projectile":8}],13:[function(require,module,exports){
 module.exports = {
     'generate_item_id': function (seed) {
         'use strict';
@@ -706,7 +616,7 @@ module.exports = {
     }
 };
 
-},{}],18:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = {
     'generate_quest_id': function (seed) {
         'use strict';
