@@ -13,6 +13,11 @@ function Player(game, x, y) {
     this.animations.add('walk');
     this.animations.play('walk', 12, true);
 
+    this.shadow = game.add.sprite(x, y, 'base_player');
+    this.shadow.tint = 0x000000;
+    this.shadow.alpha = 0.6;
+    this.shadow.anchor.setTo(0.64, 0.5);
+
     this.movement_speed = 250;
     this.jump_speed = 350;
     this.acceleration = 40;
@@ -72,6 +77,7 @@ Player.prototype.handle_update = function (game) {
     'use strict';
     this.body.velocity.x = 0;
     this.angle = 0;
+    this.shadow.position = this.position;
 
     if (game.input.activePointer.isDown) {
         this.fire(game, game.input.mousePointer.position);

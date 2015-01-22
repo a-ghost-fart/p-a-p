@@ -30,7 +30,7 @@ module.exports = {
             'position': new Vec2(100, 100),
             'diffuse': 0.4,
             'distance': 250,
-            'color': 'rgba(255, 200, 200, 0.1)'
+            'color': 'rgba(255, 200, 200, 0.6)'
         });
         this.lighting = new Lighting({
             'light': this.light,
@@ -38,7 +38,7 @@ module.exports = {
         });
         this.darkmask = new DarkMask({
             'lights': [this.light],
-            'color': 'rgba(0, 0, 0, 1)'
+            'color': 'rgba(0, 0, 0, 0.7)'
         });
         // end Lighting WIP
     },
@@ -55,7 +55,7 @@ module.exports = {
             for (var x = 0; x < col_data[0].length; x++) {
                 if (col_data[y][x].index === this.collision_tile) {
                     var start = x;
-                    var end = find_block_end(col_data[y], x);
+                    var end = x;
                     block_indices.push({
                         'start': start,
                         'end': end,
@@ -179,7 +179,7 @@ module.exports = {
     'render': function () {
         'use strict';
         // Lighting WIP
-        this.lighting.cast(this.game.context);
+        this.lighting.render(this.game.context);
         this.darkmask.render(this.game.context);
         // end Lighting WIP
     }
